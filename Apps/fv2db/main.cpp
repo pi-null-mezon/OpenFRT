@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 
     QString _logfilename, _videostreamurl, _identificationurl;
     int _videodeviceid = -1;
+    bool _visualization = false;
     while((--argc > 0) && **(++argv) == '-')
         switch(*(++argv[0])) {
             case 'l':
@@ -41,12 +42,16 @@ int main(int argc, char *argv[])
             case 'a':
                 _identificationurl = ++argv[0];
                 break;
+            case 'v':
+                _visualization = true;
+                break;
             case 'h':
                 qInfo("%s v.%s", APP_NAME,APP_VERSION);
                 qInfo(" -l[filename] - set log file name");
                 qInfo(" -d[int] - enumerator of the local videodevice to open");
                 qInfo(" -s[url] - location of the videostream to process");
                 qInfo(" -a[url] - location of the face identification resource");
+                qInfo(" -v      - enable visualization");
                 qInfo("2018 %s", APP_DESIGNER);
                 return 0;
         }
@@ -73,7 +78,7 @@ int main(int argc, char *argv[])
     if(_videostreamurl.isEmpty())
         _videostreamurl = _settings.value("Videosource/Stream",QString()).toString();
     if(_videodeviceid > -1) {
-        qInfo("Trying to open a video device... %d",_videodeviceid);
+        qInfo("Trying to open video device... %d",_videodeviceid);
         if(_qvideocapture.openDevice(_videodeviceid) == false) {
             qWarning("Can not open videodevice with id %d! Abort...", _videodeviceid);
             return 2;
@@ -84,7 +89,7 @@ int main(int argc, char *argv[])
             qInfo("Success");
         }
     } else if(!_videostreamurl.isEmpty()) {
-        qInfo("Trying to open a video stream...");
+        qInfo("Trying to open video stream...");
         if(_qvideocapture.openURL(_videostreamurl.toUtf8().constData()) == false) {
             qWarning("Can not open video stream %s ! Abort...", _videostreamurl.toUtf8().constData());
             return 3;
@@ -121,7 +126,9 @@ int main(int argc, char *argv[])
     }
    _qmultyfacetracker.setDlibFaceShapePredictor(&_dlibfaceshapepredictor);
    _qmultyfacetracker.setFaceAlignmentMethod( FaceTracker::FaceShape );
-   _qmultyfacetracker.setVisualization(_settings.value("Miscellaneous/Visualization",false).toBool());
+   if(_visualization == false)
+       _visualization = _settings.value("Miscellaneous/Visualization",false).toBool();
+   _qmultyfacetracker.setVisualization(_visualization);
    qInfo("Success");
 
     // Create face recognizer, later we also place them in the separate thread
