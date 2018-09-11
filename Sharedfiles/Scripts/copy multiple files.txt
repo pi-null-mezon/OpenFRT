@@ -1,0 +1,9 @@
+So imagine a task when you have directory with name fileslocation and this directory contains a lot of subdirs with files.
+Now what We want is to copy (move) all files into particular directory with relative name outputfolder for the instance.
+So the following script should solve our task:  
+
+WIN CMD:   
+   fileslocation > mkdir outputfolder
+   fileslocation > for /r %g in (*) do copy "%g" outputfolder
+
+Note that quotes "%g" are needed if spacebars present in file path

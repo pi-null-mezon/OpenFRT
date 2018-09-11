@@ -1,0 +1,12 @@
+To open setup via browser:
+
+IP_ADDRESS/home/setup/av_videoprofile.cgi
+
+
+To open h264 video stream
+
+rtsp://admin:4321@192.168.2.24/onvif/profile2/media.smp
+
+To open MJPEG video stream
+
+rtsp://admin:4321@192.168.2.24/onvif/profile1/media.smp

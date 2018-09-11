@@ -1,0 +1,7 @@
+Netcat streaming from raspberry pi to opencv (ffmpeg based build):
+
+	RPI-side:
+	>>while true; do raspivid -t 0 -n -w 1280 -h 720 -fps 48 -ex fixedfps -b 3000000 -vf -sa -100 -o - | nc -l PORT_NUMBER; done
+	
+	PC-side:
+	cv::Videocapture::open( "tcp://YOUR-PI-IP-ADDRESS:PORT_NUMBER" )

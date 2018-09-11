@@ -1,0 +1,8 @@
+IP in office network:	10.0.48.28
+LOGIN					ADMIN
+PASSWORD:				12345
+
+URL to connect to h264 stream:			rtsp://ADMIN:12345@10.0.48.28/MediaInput/h264
+
+URL to connect to MJPEG stream:			http://ADMIN:12345@10.0.48.28/cgi-bin/mjpeg?resolution=1920x1080&quality=1
+

@@ -1,0 +1,15 @@
+Raspivid streaming options via gstreamer
+
+1) UDP method:
+
+	RPI-side:
+	>> raspivid -n -t 0 -w 1280 -h 720 -fps 30 -b 6000000 -o - | gst-launch-1.0 -e -vvvv fdsrc ! h264parse ! rtph264pay pt=96 config-interval=5 ! udpsink host=***YOUR_PC_IP*** port=5000	
+	PC-side:
+	>> gst-launch-1.0 -e -v udpsrc port=5000 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! fpsdisplaysink sync=false text-overlay=false
+	
+2) TCP method:
+
+	RPI-side:
+	>> raspivid -n -t 0 -h 720 -w 1280 -fps 25 -b 3000000 -o - | gst-launch-1.0 -vvvv fdsrc ! h264parse !  rtph264pay config-interval=1 pt=96 ! gdppay ! tcpserversink host=YOUR-PI-IP-ADDRESS port=5000	
+	PC-side:
+	>> gst-launch-1.0 -v tcpclientsrc host=YOUR-PI-IP-ADDRESS port=5000  ! gdpdepay !  rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false

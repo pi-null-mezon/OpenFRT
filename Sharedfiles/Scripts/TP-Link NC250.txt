@@ -1,0 +1,5 @@
+How to open stream from opencv in windows? (ffmpeg based build of opencv, version 310)
+
+open URL: http://admin:YWRtaW4=@192.168.1.43:8080/stream/video/h264
+
+YWRtaW4= - is a default password admin in base64 encoding
