@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 #endif
 
     char *dirname=nullptr, *apiurl=nullptr;
-    unsigned int maxthreads = 1;
+    unsigned int maxthreads = QThread::idealThreadCount();
     QUpdateThread::TaskType task = QUpdateThread::Unknown;
 
     while(--argc > 0 && (*++argv)[0] == '-')
@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
         for(int j = 0; j < lfiles.size(); ++j) {
             qInfo("     / %s", lfiles.at(j).toUtf8().constData());
             files.push_back(qMakePair(lsubdirs.at(i),subdir.absoluteFilePath(lfiles.at(j))));
+            if(task == QUpdateThread::Delete)
+                break;
         }
     }
 
@@ -78,15 +80,20 @@ int main(int argc, char *argv[])
     unsigned int threadcounter = 0;
     QString url(apiurl);
     for(int i = 0; i < files.size(); ++i) {
-        while(threadcounter >= maxthreads) {
-            QCoreApplication::processEvents();
-        }
-        QUpdateThread *thread = new QUpdateThread(&threadcounter,url,task,files.at(i).first,files.at(i).second);
-        QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
-        if(i == files.size()-1) {
+        if(i != files.size()-1) {
+            while(threadcounter >= maxthreads)
+                QCoreApplication::processEvents();
+            QUpdateThread *thread = new QUpdateThread(&threadcounter,url,task,files.at(i).first,files.at(i).second);
+            QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
+            thread->start();
+        } else { // last task should be executed differently, basically we need wait untill all other task will be accomplished
+            while(threadcounter > 0)
+                QCoreApplication::processEvents();
+            QUpdateThread *thread = new QUpdateThread(&threadcounter,url,task,files.at(i).first,files.at(i).second);
+            QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
             QObject::connect(thread,SIGNAL(finished()),&a,SLOT(quit()));
+            thread->start();
         }
-        thread->start();
     }
     return a.exec();
 }

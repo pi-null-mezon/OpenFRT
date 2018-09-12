@@ -24,12 +24,11 @@ QUpdateThread::~QUpdateThread()
 
 void QUpdateThread::run()
 {
-    qInfo("labelinfo: %s",labelinfo.toUtf8().constData());
     QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
     QHttpPart labelinfoPart;
     labelinfoPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"labelinfo\""));
-    labelinfoPart.setBody(labelinfo.toLocal8Bit());
+    labelinfoPart.setBody(labelinfo.toUtf8());
     multiPart->append(labelinfoPart);
 
     QHttpPart imagePart;
@@ -51,15 +50,13 @@ void QUpdateThread::run()
         break;
 
     }
-    qInfo("POST %s",apiurl.toUtf8().constData());
+
     QNetworkRequest request(QUrl::fromUserInput(apiurl));
     QNetworkAccessManager manager;
     QNetworkReply *reply = manager.post(request, multiPart);
     connect(reply,SIGNAL(finished()),this,SLOT(quit()));
     exec();
-
     qInfo("%s", reply->readAll().constData());
-
     multiPart->setParent(reply); // delete the multiPart with the reply
     reply->deleteLater();
 }
