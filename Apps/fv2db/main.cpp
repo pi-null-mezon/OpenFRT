@@ -46,13 +46,13 @@ int main(int argc, char *argv[])
                 _visualization = true;
                 break;
             case 'h':
-                qInfo("%s v.%s", APP_NAME,APP_VERSION);
+                qInfo("%s v.%s\n", APP_NAME,APP_VERSION);
                 qInfo(" -l[filename] - set log file name");
                 qInfo(" -d[int] - enumerator of the local videodevice to open");
                 qInfo(" -s[url] - location of the videostream to process");
                 qInfo(" -a[url] - location of the face identification resource");
                 qInfo(" -v      - enable visualization");
-                qInfo("2018 %s", APP_DESIGNER);
+                qInfo("designed by %s in 2018", APP_DESIGNER);
                 return 0;
         }
 
