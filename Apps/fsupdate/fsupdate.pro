@@ -24,9 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-    qupdatethread.cpp
-
-include($${PWD}/../../Sharedfiles/opencv.pri)
+        qupdatethread.cpp
 
 HEADERS += \
-    qupdatethread.h
+        qupdatethread.h

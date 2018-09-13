@@ -16,6 +16,9 @@ int main(int argc, char *argv[])
 
     while(--argc > 0 && (*++argv)[0] == '-')
         switch(*++argv[0]) {
+            case 't':
+                maxthreads = QString(++argv[0]).toUInt();
+                break;
             case 'i':
                 dirname = ++argv[0];
                 break;
@@ -34,6 +37,7 @@ int main(int argc, char *argv[])
                 qInfo(" -r          - call remember method from the api");
                 qInfo(" -d          - call delete method from the api");
                 qInfo(" -i[dirname] - directory with labels and pictures in the subdirs");
+                qInfo(" -t[uint]    - maximum number of worker threads");
                 qInfo(" -h          - this help");
                 qInfo("designed by %s in 2018", APP_DESIGNER);
                 return 0;
@@ -50,11 +54,15 @@ int main(int argc, char *argv[])
         qWarning("Empty labels directory name! Abort...");
         return 3;
     }
+    if(maxthreads == 0) {
+        qWarning("You should specify non zero positive quantity of worker threads! Abort...");
+        return 4;
+    }
 
     QDir dir(dirname);
     if(dir.exists() == false) {
         qWarning("Empty labels directory name! Abort...");
-        return 3;
+        return 5;
     }
 
     QList<QPair<QString,QString>> files;
