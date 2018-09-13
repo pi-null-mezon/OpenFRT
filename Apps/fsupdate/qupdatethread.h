@@ -3,6 +3,20 @@
 
 #include <QThread>
 
+QStringList askLabelsInfoFrom(const QString &_apiurl);
+
+class QAskLabelsThread : public QThread
+{
+    Q_OBJECT
+public:
+    QAskLabelsThread(const QString &_apiurl, QByteArray *_replydata, QObject *_parent=nullptr);
+protected:
+    void run();
+private:
+    QString apiurl;
+    QByteArray *replydata;
+};
+
 class QUpdateThread : public QThread
 {
     Q_OBJECT
