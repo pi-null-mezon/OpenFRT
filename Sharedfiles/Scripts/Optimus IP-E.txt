@@ -1,0 +1,6 @@
+ƒл€ IP-E rtsp://ip_адрес/user=admin&password=&channel=1&stream=0.sdp?
+user=admin Ц пользователь устройства
+password= Ц пароль пользовател€, по умолчанию отсутсвует 
+channel=1 Ц первый канал 
+stream=0.sdp?Ц основной поток или цифра 1 - stream=1.sdp? Ц второй поток
+ѕример rtsp://192.168.1.93/user=admin&password=&channel=1&stream=1.sdp?

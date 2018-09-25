@@ -1,0 +1,34 @@
+Ссылка на RTSP поток для IP видеокамер IPTronic
+
+
+main stream rtsp://ip address:554/1/h264major
+
+sub stream rtsp://ip address:554/1/h264minor
+
+
+Либо
+
+main stream rtsp://ip address:554/0
+
+sub stream rtsp://ip address:554/1
+
+
+Так же порт 80
+
+Еще одна альтернативная ссылка:
+
+
+rtsp://192.168.0.52:554/user=admin&password=ПАРОЛЬ&channel=1&stream=0.sdp?
+
+
+Так же порт 80
+
+Ссылка для Интеллект
+
+rtsp://ip address:554/0;rtsp://ip address:554/1
+
+
+С авторизацией
+
+
+rtsp://admin:admin@ip address:554/0;rtsp://admin:admin@ip address:554/1

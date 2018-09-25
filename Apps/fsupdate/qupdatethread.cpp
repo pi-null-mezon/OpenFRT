@@ -59,7 +59,8 @@ void QUpdateThread::run()
     QNetworkReply *reply = manager.post(request, multiPart);
     connect(reply,SIGNAL(finished()),this,SLOT(quit()));
     exec();
-    qInfo("%s", reply->readAll().constData());
+    qInfo("Code: %s\n%s", reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toString().toUtf8().constData(),
+          reply->readAll().constData());
     multiPart->setParent(reply); // delete the multiPart with the reply
     reply->deleteLater();
 }

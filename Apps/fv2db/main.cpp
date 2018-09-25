@@ -104,10 +104,10 @@ int main(int argc, char *argv[])
     // Ok, now the video source should be opened, let's prepare face tracker
     qInfo("Trying to load face detection resources...");
     QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",11).toUInt());
-    _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.3).toFloat(),
-                                           _settings.value("Facetracking/FaceVPortion",1.6).toFloat());
-    _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",156).toInt(),
-                                                  _settings.value("Facetracking/FaceVSize",192).toInt()));
+    _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.5).toFloat(),
+                                           _settings.value("Facetracking/FaceVPortion",2.0).toFloat());
+    _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
+                                                  _settings.value("Facetracking/FaceVSize",226).toInt()));
 
     cv::CascadeClassifier _facecascade(a.applicationDirPath().append("/haarcascade_frontalface_alt.xml").toUtf8().constData());
     if(_facecascade.empty()) {
