@@ -2,11 +2,6 @@
 #define QSLACKCLIENT_H
 
 #include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QEventLoop>
-#include <QUrl>
 #include <QDateTime>
 
 #include <opencv2/core.hpp>

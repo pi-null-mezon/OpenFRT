@@ -1,7 +1,5 @@
 #include "qslackclient.h"
 
-#include<QNetworkReply>
-
 #include "qslackimageposter.h"
 
 QSlackClient::QSlackClient(QObject *_parent) : QObject(_parent),
@@ -28,7 +26,7 @@ void QSlackClient::enrollRecognition(int _label, double _distance, const cv::Str
 
     prevTime  = _time;
 
-    if(unrecfacesinrow == 17) {        
+    if(unrecfacesinrow == 15) {
         postImageIntoSlackChannel(getSlackchannelid(),getSlackbottoken(),-1,-1.0,"Незнакомец",_img);
     }
 }

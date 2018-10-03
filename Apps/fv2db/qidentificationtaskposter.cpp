@@ -50,11 +50,11 @@ void QIdentificationTaskPoster::run()
                                         _json.value("labelinfo").toString().toUtf8().constData(),
                                         facerr);
                 } else {
-                    emit labelPredicted(-1,DBL_MAX,"",facerr);
+                    emit labelPredicted(-1,-1.0,"",facerr);
                 }
             } else {
                 qWarning("%s", _replydata.constData());
-                emit labelPredicted(-1,DBL_MAX,"",facerr);
+                emit labelPredicted(-1,-1.0,"",facerr);
             }
         } else {
             qWarning("JSON parser error - %s", _jperror.errorString().toUtf8().constData());

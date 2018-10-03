@@ -12,6 +12,7 @@
 #include "qslackclient.h"
 #include "qslackimageposter.h"
 #include "qfacerecognizer.h"
+#include "qmongodbclient.h"
 
 QFile *p_logfile = nullptr;
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication a(argc, argv);
 
-    QString _logfilename, _videostreamurl, _identificationurl;
+    QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken;
     int _videodeviceid = -1;
     bool _visualization = false;
     while((--argc > 0) && **(++argv) == '-')
@@ -45,12 +46,20 @@ int main(int argc, char *argv[])
             case 'v':
                 _visualization = true;
                 break;
+            case 'e':
+                _eveserverposturl = ++argv[0];
+                break;
+            case 't':
+                _mongodbaccesstoken = ++argv[0];
+                break;
             case 'h':
                 qInfo("%s v.%s\n", APP_NAME,APP_VERSION);
                 qInfo(" -l[filename] - set log file name");
                 qInfo(" -d[int] - enumerator of the local videodevice to open");
-                qInfo(" -s[url] - location of the videostream to process");
-                qInfo(" -a[url] - location of the face identification resource");
+                qInfo(" -s[url] - url of the videostream to process");
+                qInfo(" -a[url] - url of the face identification resource (openirt web server)");
+                qInfo(" -e[url] - url of the MongoDB RESTfull interface to post events");
+                qInfo(" -t[str] - MongoDB access token");
                 qInfo(" -v      - enable visualization");
                 qInfo("designed by %s in 2018", APP_DESIGNER);
                 return 0;
@@ -100,10 +109,17 @@ int main(int argc, char *argv[])
         qWarning("Video source has not been selected! Abort...");
         return 4;
     }
+    // Let's chek if user want to save events into MongoDB
+    if(_eveserverposturl.isEmpty()) {
+        _eveserverposturl = _settings.value("MongoDB/URL",QString()).toString();
+    }
+    if(_mongodbaccesstoken.isEmpty()) {
+        _mongodbaccesstoken = _settings.value("MongoDB/Token",QString()).toString();
+    }
 
     // Ok, now the video source should be opened, let's prepare face tracker
     qInfo("Trying to load face detection resources...");
-    QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",11).toUInt());
+    QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",7).toUInt());
     _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.5).toFloat(),
                                            _settings.value("Facetracking/FaceVPortion",2.0).toFloat());
     _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
@@ -142,14 +158,24 @@ int main(int argc, char *argv[])
     // Let's create video locker
     QVideoLocker _qvideolocker;
 
+    //MongoDB integration (through Eve REST full WEB interface)
+    QMongoDBClient *_qmongodbclient;
+    if((!_eveserverposturl.isEmpty()) && (!_mongodbaccesstoken.isEmpty())) {
+        _qmongodbclient = new QMongoDBClient(&_qfacerecognizer);
+        _qmongodbclient->setUrl(_eveserverposturl);
+        _qmongodbclient->setToken(_mongodbaccesstoken);
+        QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::Mat)), _qmongodbclient, SLOT(enrollRecognition(int,double,cv::String,cv::Mat)));
+    }
+
     // Slack integration
-    QSlackClient _qslackclient;
+    QSlackClient *_qslackclient;
     QString _slackchannelid = _settings.value("Slack/ChannelID",QString()).toString();
     QString _slackbottoken = _settings.value("Slack/Bottoken",QString()).toString();
     if((!_slackchannelid.isEmpty()) && (!_slackbottoken.isEmpty())) {
-        _qslackclient.setSlackchannelid(_slackchannelid);
-        _qslackclient.setSlackbottoken(_slackbottoken);
-        QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::Mat)), &_qslackclient, SLOT(enrollRecognition(int,double,cv::String,cv::Mat)));
+        _qslackclient = new QSlackClient(&_qfacerecognizer);
+        _qslackclient->setSlackchannelid(_slackchannelid);
+        _qslackclient->setSlackbottoken(_slackbottoken);
+        QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::Mat)), _qslackclient, SLOT(enrollRecognition(int,double,cv::String,cv::Mat)));
     }
 
     // Oh, now let's make signals/slots connections
