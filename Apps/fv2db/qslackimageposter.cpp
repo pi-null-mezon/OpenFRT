@@ -49,8 +49,11 @@ void QSlackImagePoster::run()
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(quit()));
     exec();
 
-    /*qInfo("[QSlackImagePoster] Error string: %s", reply->errorString().toUtf8().constData());
-    qInfo("[QSlackImagePoster] Reply: %s", reply->readAll().constData());*/
+    if(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
+        //qInfo("[QSlackImagePoster] Reply: %s", reply->readAll().constData());
+    } else {
+        //qInfo("[QSlackImagePoster] Error: %s", reply->errorString().toUtf8().constData());
+    }
 
     fields->setParent(reply);
     reply->deleteLater();

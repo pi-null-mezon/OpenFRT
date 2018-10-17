@@ -18,8 +18,11 @@ public:
     QString getToken() const;
     void setToken(const QString &value);
 
+    QString getSpotid() const;
+    void setSpotid(const QString &value);
+
 public slots:
-    void enrollRecognition(int _label, double _distance, const cv::String &_labelInfo, const cv::Mat &_img);
+    void enrollRecognition(int _label, double _distance, const cv::String &_labelInfo, const cv::RotatedRect &_rrect);
 
 private:
     QTime prevTime;
@@ -28,6 +31,7 @@ private:
 
     QString url;
     QString token;
+    QString spotid;
 };
 
 #endif // QMONGODBCLIENT_H

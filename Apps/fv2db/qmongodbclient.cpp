@@ -1,6 +1,8 @@
 #include "qmongodbclient.h"
 
 #include <QDateTime>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include "qmongodbeventposter.h"
 
@@ -28,28 +30,48 @@ void QMongoDBClient::setToken(const QString &value)
     token = value;
 }
 
-void QMongoDBClient::enrollRecognition(int _label, double _distance, const cv::String &_labelInfo, const cv::Mat &_img)
+void QMongoDBClient::enrollRecognition(int _label, double _distance, const cv::String &_labelInfo, const cv::RotatedRect &_rrect)
 {
-    QTime _time = QTime::currentTime();
+    Q_UNUSED(_distance);
+    const QDateTime _dt = QDateTime::currentDateTime();
     if(_label > -1) {
-        if((prevLabel != _label) || (prevTime.secsTo(_time) > 7)) {
+        if((prevLabel != _label) || (prevTime.secsTo(_dt.time()) > 7)) {
             // TO DO - make JSON for event
-            //postEventToMonngoDB(getUrl(),getToken());
-
-
+            QJsonObject _json;
+            _json["labelInfo"] = _labelInfo.c_str();
+            _json["camid"]  = getSpotid();
+            _json["camdt"]  = _dt.toString("hh:mm:ss dd.MM.yyyy");
+            QJsonObject _eventjson;
+            _eventjson["event"] = _json;
+            postEventToMonngoDB(getUrl(),getToken(),QJsonDocument(_eventjson).toJson());
         }
         unrecfacesinrow = 0;
         prevLabel = _label;
     } else {
-        if(prevTime.secsTo(_time) > 11) {
+        if(prevTime.secsTo(_dt.time()) > 11) {
             unrecfacesinrow = 1;
         } else {
             unrecfacesinrow++;
         }
     }
     if(unrecfacesinrow == 15) {
-        // TO DO - make JSON for event
-       // postEventToMonngoDB(getUrl(),getToken());
+        QJsonObject _json;
+        _json["labelInfo"] = "Unknown";
+        _json["camid"]  = getSpotid();
+        _json["camdt"]  = _dt.toString("hh:mm:ss dd.MM.yyyy");
+        QJsonObject _eventjson;
+        _eventjson["event"] = _json;
+        postEventToMonngoDB(getUrl(),getToken(),QJsonDocument(_eventjson).toJson());
     }
-    prevTime  = _time;
+    prevTime  = _dt.time();
+}
+
+QString QMongoDBClient::getSpotid() const
+{
+    return spotid;
+}
+
+void QMongoDBClient::setSpotid(const QString &value)
+{
+    spotid = value;
 }

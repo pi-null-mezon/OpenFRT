@@ -23,10 +23,22 @@ int main(int argc, char *argv[])
     #ifdef Q_OS_WIN
     setlocale(LC_CTYPE,"");
     #endif
+    if(argc == 1) {
+        qInfo("%s v.%s\n designed by %s in 2018", APP_NAME,APP_VERSION,APP_DESIGNER);
+        qInfo(" -l[filename] - set log file name");
+        qInfo(" -d[int] - enumerator of the local videodevices to open");
+        qInfo(" -s[url] - url of the videostream to process");
+        qInfo(" -a[url] - url of the face identification resource (openirt web server)");
+        qInfo(" -e[url] - url of the MongoDB RESTfull interface to post events");
+        qInfo(" -t[str] - MongoDB access token");
+        qInfo(" -p[str] - viewspot identificator");
+        qInfo(" -v      - enable visualization");
+        return 0;
+    }
 
     QCoreApplication a(argc, argv);
 
-    QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken;
+    QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken, _viewspotid;
     int _videodeviceid = -1;
     bool _visualization = false;
     while((--argc > 0) && **(++argv) == '-')
@@ -52,17 +64,9 @@ int main(int argc, char *argv[])
             case 't':
                 _mongodbaccesstoken = ++argv[0];
                 break;
-            case 'h':
-                qInfo("%s v.%s\n", APP_NAME,APP_VERSION);
-                qInfo(" -l[filename] - set log file name");
-                qInfo(" -d[int] - enumerator of the local videodevice to open");
-                qInfo(" -s[url] - url of the videostream to process");
-                qInfo(" -a[url] - url of the face identification resource (openirt web server)");
-                qInfo(" -e[url] - url of the MongoDB RESTfull interface to post events");
-                qInfo(" -t[str] - MongoDB access token");
-                qInfo(" -v      - enable visualization");
-                qInfo("designed by %s in 2018", APP_DESIGNER);
-                return 0;
+            case 'p':
+                _viewspotid = ++argv[0];
+                break;
         }
 
     // Enable logging
@@ -109,7 +113,11 @@ int main(int argc, char *argv[])
         qWarning("Video source has not been selected! Abort...");
         return 4;
     }
-    // Let's chek if user want to save events into MongoDB
+    // Let's check if user set viewspot identifier
+    if(_viewspotid.isEmpty()) {
+        _viewspotid = _settings.value("Location/ViewspotID","Unset").toString();
+    }
+    // Let's check if user want to save events into MongoDB
     if(_eveserverposturl.isEmpty()) {
         _eveserverposturl = _settings.value("MongoDB/URL",QString()).toString();
     }
@@ -164,7 +172,8 @@ int main(int argc, char *argv[])
         _qmongodbclient = new QMongoDBClient(&_qfacerecognizer);
         _qmongodbclient->setUrl(_eveserverposturl);
         _qmongodbclient->setToken(_mongodbaccesstoken);
-        QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::Mat)), _qmongodbclient, SLOT(enrollRecognition(int,double,cv::String,cv::Mat)));
+        _qmongodbclient->setSpotid(_viewspotid);
+        QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), _qmongodbclient, SLOT(enrollRecognition(int,double,cv::String,cv::RotatedRect)));
     }
 
     // Slack integration

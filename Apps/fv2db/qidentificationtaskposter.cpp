@@ -59,6 +59,8 @@ void QIdentificationTaskPoster::run()
         } else {
             qWarning("JSON parser error - %s", _jperror.errorString().toUtf8().constData());
         }
+    } else {
+        qInfo("[QIdentificationTaskPoster] Error: %s", _reply->errorString().toUtf8().constData());
     }
 
     _fields->setParent(_reply);

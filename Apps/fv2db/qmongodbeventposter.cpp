@@ -21,6 +21,11 @@ void QMongoDBEventPoster::run()
     QNetworkReply *_reply = _nwmanager.post(_request,data);
     connect(_reply,SIGNAL(finished()),this,SLOT(quit()));
     exec();
+    if(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
+        //qInfo("[QMongoDBEventPoster] Reply: %s", _reply->readAll().constData());
+    } else {
+        //qInfo("[QMongoDBEventPoster] Error: %s", _reply->errorString().toUtf8().constData());
+    }
     _reply->deleteLater();
 }
 

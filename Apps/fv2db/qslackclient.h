@@ -11,7 +11,7 @@ class QSlackClient : public QObject
     Q_OBJECT
 
 public:
-    QSlackClient(QObject *_parent=0);
+    QSlackClient(QObject *_parent=nullptr);
 
     void setSlackbottoken(const QString &value);
     QString getSlackbottoken() const;
