@@ -5,6 +5,7 @@
 #include <QThread>
 
 #include <QFile>
+#include <QFileInfo>
 
 #include "qmultyfacetracker.h"
 #include "qvideocapture.h"
@@ -25,12 +26,13 @@ int main(int argc, char *argv[])
     #endif
     if(argc == 1) {
         qInfo("%s v.%s\n designed by %s in 2018", APP_NAME,APP_VERSION,APP_DESIGNER);
+        qInfo(" -i[filename] - set settings filename");
         qInfo(" -l[filename] - set log file name");
         qInfo(" -d[int] - enumerator of the local videodevices to open");
         qInfo(" -s[url] - url of the videostream to process");
-        qInfo(" -a[url] - url of the face identification resource (openirt web server)");
+        qInfo(" -a[url] - url of the openirt web server (face identification API)");
         qInfo(" -e[url] - url of the MongoDB RESTfull interface to post events");
-        qInfo(" -t[str] - MongoDB access token");
+        qInfo(" -t[str] - auth token for MongoDB RESTfull interface");
         qInfo(" -p[str] - viewspot identificator");
         qInfo(" -v      - enable visualization");
         return 0;
@@ -38,11 +40,14 @@ int main(int argc, char *argv[])
 
     QCoreApplication a(argc, argv);
 
-    QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken, _viewspotid;
+    QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken, _viewspotid, _settingsfilename;
     int _videodeviceid = -1;
     bool _visualization = false;
     while((--argc > 0) && **(++argv) == '-')
         switch(*(++argv[0])) {
+            case 'i':
+                _settingsfilename = ++argv[0];
+                break;
             case 'l':
                 _logfilename = ++argv[0];
                 break;
@@ -67,9 +72,17 @@ int main(int argc, char *argv[])
             case 'p':
                 _viewspotid = ++argv[0];
                 break;
+        }    
+    // First let's check if user wants to use settings file
+    if(!_settingsfilename.isEmpty()) {
+        QFileInfo _sfinfo(_settingsfilename);
+        if(_sfinfo.exists() == false) {
+            qWarning("Can not find settings file %s! Abort...", _settingsfilename.toUtf8().constData());
+            return 1;
         }
-
-    // Enable logging
+    }
+    QSettings _settings(_settingsfilename,QSettings::IniFormat);
+    // Check if logging needed
     if(!_logfilename.isEmpty()) {
         p_logfile = new QFile(_logfilename);
         if(p_logfile->open(QIODevice::Append)) {
@@ -78,11 +91,9 @@ int main(int argc, char *argv[])
         } else {
             delete p_logfile;
             qWarning("Can not create log file, check your permissions! Abort...");
-            return 1;
+            return 2;
         }
     }
-
-    QSettings _settings(a.applicationDirPath().append("/%1.ini").arg(APP_NAME),QSettings::IniFormat);
     // Let's try to open video source
     QVideoCapture _qvideocapture;
     _qvideocapture.setFlipFlag(_settings.value("Videoprops/Flip",false).toBool());
@@ -94,7 +105,7 @@ int main(int argc, char *argv[])
         qInfo("Trying to open video device... %d",_videodeviceid);
         if(_qvideocapture.openDevice(_videodeviceid) == false) {
             qWarning("Can not open videodevice with id %d! Abort...", _videodeviceid);
-            return 2;
+            return 3;
         } else {
             _qvideocapture.setCaptureProps(_settings.value("Videoprops/Width",640).toInt(),
                                            _settings.value("Videoprops/Height",360).toInt(),
@@ -105,13 +116,13 @@ int main(int argc, char *argv[])
         qInfo("Trying to open video stream...");
         if(_qvideocapture.openURL(_videostreamurl.toUtf8().constData()) == false) {
             qWarning("Can not open video stream %s ! Abort...", _videostreamurl.toUtf8().constData());
-            return 3;
+            return 4;
         } else {
             qInfo("Success");
         }
     } else {
         qWarning("Video source has not been selected! Abort...");
-        return 4;
+        return 5;
     }
     // Let's check if user set viewspot identifier
     if(_viewspotid.isEmpty()) {
@@ -128,15 +139,16 @@ int main(int argc, char *argv[])
     // Ok, now the video source should be opened, let's prepare face tracker
     qInfo("Trying to load face detection resources...");
     QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",7).toUInt());
-    _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.5).toFloat(),
-                                           _settings.value("Facetracking/FaceVPortion",2.0).toFloat());
+    _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.35).toFloat(),
+                                           _settings.value("Facetracking/FaceVPortion",1.75).toFloat());
     _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
                                                   _settings.value("Facetracking/FaceVSize",226).toInt()));
 
-    cv::CascadeClassifier _facecascade(a.applicationDirPath().append("/haarcascade_frontalface_alt.xml").toUtf8().constData());
+    cv::CascadeClassifier _facecascade(a.applicationDirPath().append("/haarcascade_frontalface_alt2.xml").toUtf8().constData());
     if(_facecascade.empty()) {
+        _qvideocapture.close();
         qWarning("Can not load face classifier cascade! Abort...");
-        return 5;
+        return 6;
     } else {
         _qmultyfacetracker.setFaceClassifier(&_facecascade);
     }
@@ -146,7 +158,7 @@ int main(int argc, char *argv[])
     }
     catch(...) {
         qWarning("Can not load dlib's face shape predictor resources! Abort...");
-        return 6;
+        return 7;
     }
    _qmultyfacetracker.setDlibFaceShapePredictor(&_dlibfaceshapepredictor);
    _qmultyfacetracker.setFaceAlignmentMethod( FaceTracker::FaceShape );
@@ -160,7 +172,7 @@ int main(int argc, char *argv[])
         _identificationurl = _settings.value("Facerecognition/ApiURL",QString()).toString();
     if(_identificationurl.isEmpty()) {
         qWarning("You have not provide identification resources location! Abort...");
-        return 7;
+        return 8;
     }
     QFaceRecognizer _qfacerecognizer(_identificationurl);
     // Let's create video locker
