@@ -49,6 +49,10 @@ void QIdentificationTaskPoster::run()
                                         _distance,
                                         _json.value("labelinfo").toString().toUtf8().constData(),
                                         facerr);
+                    emit labelPredicted(_json.value("label").toInt(),
+                                        _distance,
+                                        _json.value("labelinfo").toString().toUtf8().constData(),
+                                        facemat);
                 } else {
                     emit labelPredicted(-1,-1.0,"",facerr);
                 }

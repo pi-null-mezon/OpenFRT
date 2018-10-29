@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     if(!_logfilename.isEmpty()) {
         p_logfile = new QFile(_logfilename);
         if(p_logfile->open(QIODevice::Append)) {
-            qInfo("All messages will be dumped into logfile");
+            qInfo("All messages will be saved into logfile");
             qInstallMessageHandler(logMessage);
         } else {
             delete p_logfile;
@@ -102,26 +102,26 @@ int main(int argc, char *argv[])
     if(_videostreamurl.isEmpty())
         _videostreamurl = _settings.value("Videosource/Stream",QString()).toString();
     if(_videodeviceid > -1) {
-        qInfo("Trying to open video device... %d",_videodeviceid);
+        qInfo(" Trying to open video device %d",_videodeviceid);
         if(_qvideocapture.openDevice(_videodeviceid) == false) {
-            qWarning("Can not open videodevice with id %d! Abort...", _videodeviceid);
+            qWarning("  Can not open videodevice! Abort...");
             return 3;
         } else {
             _qvideocapture.setCaptureProps(_settings.value("Videoprops/Width",640).toInt(),
                                            _settings.value("Videoprops/Height",360).toInt(),
                                            _settings.value("Videoprops/FPS",30).toInt());
-            qInfo("Success");
+            qInfo("  Success");
         }
     } else if(!_videostreamurl.isEmpty()) {
-        qInfo("Trying to open video stream...");
+        qInfo(" Trying to open video stream %s", _videostreamurl.toUtf8().constData());
         if(_qvideocapture.openURL(_videostreamurl.toUtf8().constData()) == false) {
-            qWarning("Can not open video stream %s ! Abort...", _videostreamurl.toUtf8().constData());
+            qWarning("  Can not open video stream! Abort...");
             return 4;
         } else {
-            qInfo("Success");
+            qInfo("  Success");
         }
     } else {
-        qWarning("Video source has not been selected! Abort...");
+        qWarning("  Video source has not been selected! Abort...");
         return 5;
     }
     // Let's check if user set viewspot identifier
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     }
 
     // Ok, now the video source should be opened, let's prepare face tracker
-    qInfo("Trying to load face detection resources...");
+    qInfo(" Trying to load face detection resources");
     QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",7).toUInt());
     _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.35).toFloat(),
                                            _settings.value("Facetracking/FaceVPortion",1.75).toFloat());
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     cv::CascadeClassifier _facecascade(a.applicationDirPath().append("/haarcascade_frontalface_alt2.xml").toUtf8().constData());
     if(_facecascade.empty()) {
         _qvideocapture.close();
-        qWarning("Can not load face classifier cascade! Abort...");
+        qWarning("  Can not load face classifier cascade! Abort...");
         return 6;
     } else {
         _qmultyfacetracker.setFaceClassifier(&_facecascade);
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         dlib::deserialize(a.applicationDirPath().append("/shape_predictor_5_face_landmarks.dat").toStdString()) >> _dlibfaceshapepredictor;
     }
     catch(...) {
-        qWarning("Can not load dlib's face shape predictor resources! Abort...");
+        qWarning("  Can not load dlib's face shape predictor resources! Abort...");
         return 7;
     }
    _qmultyfacetracker.setDlibFaceShapePredictor(&_dlibfaceshapepredictor);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
    if(_visualization == false)
        _visualization = _settings.value("Miscellaneous/Visualization",false).toBool();
    _qmultyfacetracker.setVisualization(_visualization);
-   qInfo("Success");
+   qInfo("  Success");
 
     // Create face recognizer, later we also place them in the separate thread
     if(_identificationurl.isEmpty())
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,cv::RotatedRect)));
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qvideolocker, SLOT(unlock()));
 
-    qInfo("Starting threads...");
+    qInfo(" Starting threads");
     // Let's organize threads
     QThread _qvideocapturethread; // a thread for the video capture
     _qvideocapture.moveToThread(&_qvideocapturethread);
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     // Resume video capturing after timeout
     QTimer::singleShot(500, &_qvideocapture, SLOT(resume()));
     // Start to process events
-    qInfo("Success");
+    qInfo("  Success");
     return a.exec();
 }
 

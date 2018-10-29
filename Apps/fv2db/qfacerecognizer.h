@@ -13,6 +13,7 @@ public:
 
 signals:
     void labelPredicted(int _label, double _distance, const cv::String &_labelInfo, const cv::RotatedRect &_facerr);
+    void labelPredicted(int _label, double _distance, const cv::String &_labelInfo, const cv::Mat &_faceimg);
 
 public slots:
     void predict(const cv::Mat &_facemat, const cv::RotatedRect &_facerr) const;
