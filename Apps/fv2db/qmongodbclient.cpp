@@ -33,6 +33,7 @@ void QMongoDBClient::setToken(const QString &value)
 void QMongoDBClient::enrollRecognition(int _label, double _distance, const cv::String &_labelInfo, const cv::RotatedRect &_rrect)
 {
     Q_UNUSED(_distance);
+    Q_UNUSED(_rrect);
     const QDateTime _dt = QDateTime::currentDateTime();
     if(_label > -1) {
         if((prevLabel != _label) || (prevTime.secsTo(_dt.time()) > 7)) {

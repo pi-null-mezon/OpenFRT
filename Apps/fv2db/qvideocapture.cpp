@@ -1,8 +1,9 @@
 #include "qvideocapture.h"
 
 QVideoCapture::QVideoCapture(QObject *parent) : QObject(parent),
+    pt_timer(nullptr),
     m_timerintervalms(1),
-    pt_timer(nullptr)
+    flipFlag(false)
 {
     qRegisterMetaType<cv::Mat>("cv::Mat");    
 }

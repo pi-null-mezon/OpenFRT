@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     if(_videostreamurl.isEmpty())
         _videostreamurl = _settings.value("Videosource/Stream",QString()).toString();
     if(_videodeviceid > -1) {
-        qInfo(" Trying to open video device %d",_videodeviceid);
+        qInfo("Trying to open video device %d",_videodeviceid);
         if(_qvideocapture.openDevice(_videodeviceid) == false) {
             qWarning("  Can not open videodevice! Abort...");
             return 3;
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
             qInfo("  Success");
         }
     } else if(!_videostreamurl.isEmpty()) {
-        qInfo(" Trying to open video stream %s", _videostreamurl.toUtf8().constData());
+        qInfo("Trying to open video stream %s", _videostreamurl.toUtf8().constData());
         if(_qvideocapture.openURL(_videostreamurl.toUtf8().constData()) == false) {
             qWarning("  Can not open video stream! Abort...");
             return 4;
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     }
 
     // Ok, now the video source should be opened, let's prepare face tracker
-    qInfo(" Trying to load face detection resources");
+    qInfo("Trying to load face detection resources");
     QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",7).toUInt());
     _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.35).toFloat(),
                                            _settings.value("Facetracking/FaceVPortion",1.75).toFloat());
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,cv::RotatedRect)));
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qvideolocker, SLOT(unlock()));
 
-    qInfo(" Starting threads");
+    qInfo("Starting threads");
     // Let's organize threads
     QThread _qvideocapturethread; // a thread for the video capture
     _qvideocapture.moveToThread(&_qvideocapturethread);

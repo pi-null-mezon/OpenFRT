@@ -38,7 +38,7 @@ private:
     cv::VideoCapture m_videocapture;
     QTimer *pt_timer;
     int m_timerintervalms;
-    bool flipFlag = false;
+    bool flipFlag;
     SourceType m_sourcetype;
     cv::String m_sourcename;
 };
