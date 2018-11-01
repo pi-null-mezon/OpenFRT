@@ -35,7 +35,6 @@ HEADERS += \
     qmongodbeventposter.h
 
 include( $${PWD}/../../Sharedfiles/opencv.pri )
-include( $${PWD}/../../Sharedfiles/opencl.pri )
 include( $${PWD}/../../Sharedfiles/openmp.pri )
 include( $${PWD}/../../Sharedfiles/dlib.pri )
 include( $${PWD}/../../Src/multyfacetracker/facetracker.pri )
