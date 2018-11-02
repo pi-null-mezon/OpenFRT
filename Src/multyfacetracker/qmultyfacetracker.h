@@ -16,6 +16,7 @@ public:
 signals:
     void faceFound(const cv::Mat &faceImg, const cv::RotatedRect &rRect);
     void faceWithoutLabelFound(const cv::Mat &_facemat, const cv::RotatedRect &_rrect);
+    void frameProcessed();
 
 public slots:
     void enrollImage(const cv::Mat &inputImg);

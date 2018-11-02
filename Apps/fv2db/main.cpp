@@ -14,6 +14,7 @@
 #include "qslackimageposter.h"
 #include "qfacerecognizer.h"
 #include "qmongodbclient.h"
+#include "qframesdropper.h"
 
 QFile *p_logfile = nullptr;
 
@@ -177,6 +178,8 @@ int main(int argc, char *argv[])
     QFaceRecognizer _qfacerecognizer(_identificationurl);
     // Let's create video locker
     QVideoLocker _qvideolocker;
+    // And frames dropper
+    QFramesDropper _qframesdropper;
 
     //MongoDB integration (through Eve REST full WEB interface)
     QMongoDBClient *_qmongodbclient;
@@ -200,7 +203,9 @@ int main(int argc, char *argv[])
     }
 
     // Oh, now let's make signals/slots connections
-    QObject::connect(&_qvideocapture, SIGNAL(frameUpdated(cv::Mat)), &_qmultyfacetracker, SLOT(enrollImage(cv::Mat)), Qt::BlockingQueuedConnection);
+    QObject::connect(&_qvideocapture, SIGNAL(frameUpdated(cv::Mat)), &_qframesdropper,SLOT(updateFrame(cv::Mat)));
+    QObject::connect(&_qframesdropper,SIGNAL(frameUpdated(cv::Mat)), &_qmultyfacetracker, SLOT(enrollImage(cv::Mat)));
+    QObject::connect(&_qmultyfacetracker,SIGNAL(frameProcessed()), &_qframesdropper, SLOT(passFrames()));
     QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,cv::RotatedRect)), &_qvideolocker, SLOT(updateFrame(cv::Mat,cv::RotatedRect)));
     QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,cv::RotatedRect)), &_qfacerecognizer, SLOT(predict(cv::Mat,cv::RotatedRect)));
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,cv::RotatedRect)));
@@ -210,12 +215,11 @@ int main(int argc, char *argv[])
     // Let's organize threads
     QThread _qvideocapturethread; // a thread for the video capture
     _qvideocapture.moveToThread(&_qvideocapturethread);
-    _qvideolocker.moveToThread(&_qvideocapturethread);
     QObject::connect(&_qvideocapturethread, SIGNAL(started()), &_qvideocapture, SLOT(init()));
     _qvideocapturethread.start();
 
     QThread _qfacetrackerthread; // a thred for the face tracker    
-    _qmultyfacetracker.moveToThread(&_qfacetrackerthread);   
+    _qmultyfacetracker.moveToThread(&_qfacetrackerthread);
     _qfacetrackerthread.start(); 
 
     // Resume video capturing after timeout

@@ -54,7 +54,7 @@ void QIdentificationTaskPoster::run()
                                         _json.value("labelinfo").toString().toUtf8().constData(),
                                         facemat);
                 } else {
-                    emit labelPredicted(-1,-1.0,"",facerr);
+                    emit labelPredicted(-1,-1.0,"Unknown",facerr);
                 }
             } else {
                 qWarning("%s", _replydata.constData());

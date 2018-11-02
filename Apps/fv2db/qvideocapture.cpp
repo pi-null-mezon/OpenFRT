@@ -2,7 +2,7 @@
 
 QVideoCapture::QVideoCapture(QObject *parent) : QObject(parent),
     pt_timer(nullptr),
-    m_timerintervalms(1),
+    m_timerintervalms(15),
     flipFlag(false)
 {
     qRegisterMetaType<cv::Mat>("cv::Mat");    

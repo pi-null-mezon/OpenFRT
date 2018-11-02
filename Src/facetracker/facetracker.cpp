@@ -18,10 +18,10 @@ FaceTracker::FaceTracker(uchar length, AlignMethod method) :
     m_primaryfacedetectortupe(FaceTracker::ViolaJones)
 {
     v_rectHistory = new cv::Rect[m_historyLength];
-    setMinFaceSize(cv::Size(30,30));
+    setMinFaceSize(cv::Size(31,31));
     clearMetaData();
     resetHistory();
-    //dlibfacedet = dlib::get_frontal_face_detector(); // it slows down app load time, so it should be commented while not used
+    //dlibfacedet = dlib::get_frontal_face_detector(); // it slows down app load time, so I have commented while not used
 }
 //---------------------------------------------------------------------------------
 FaceTracker::~FaceTracker()
@@ -425,6 +425,7 @@ void FaceTracker::clearMetaData()
     m_metaID = -1;
     m_metaInfo = cv::String();
     m_metaConfidence = DBL_MAX;
+    m_inprocesisng = false;
 }
 
 uchar FaceTracker::getHistoryLength() const
@@ -435,6 +436,16 @@ uchar FaceTracker::getHistoryLength() const
 unsigned int FaceTracker::getFaceTrackedFrames() const
 {
     return m_framesFaceFound;
+}
+
+void FaceTracker::setInProcessing(bool _val)
+{
+    m_inprocesisng = _val;
+}
+
+bool FaceTracker::inProcessing() const
+{
+    return m_inprocesisng;
 }
 
 void FaceTracker::setMetaData(int _id, double _confidence, const cv::String &_info)
@@ -526,7 +537,7 @@ cv::RotatedRect FaceTracker::getFaceRotatedRect() const
 void FaceTracker::setMinFaceSize(const cv::Size size)
 {
     m_minFaceSize = size;
-    m_maxFaceSize = cv::Size(size.width*5, size.height*5);
+    m_maxFaceSize = cv::Size(size.width*6, size.height*6);
     m_minEyeSize = cv::Size(0,0);
     //m_minEyeSize = cv::Size(size.width/8, size.height/10);
 }

@@ -9,7 +9,7 @@ void QVideoLocker::updateFrame(const cv::Mat &_framemat, const cv::RotatedRect &
     if(m_locked == false) {
         __lock();
 
-        Q_EMIT frameUpdated(_framemat, _rrect);
+        emit frameUpdated(_framemat, _rrect);
     }
 }
 

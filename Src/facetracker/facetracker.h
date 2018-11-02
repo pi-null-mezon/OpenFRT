@@ -160,7 +160,7 @@ public:
      */
     int getMetaID() const;
     /**
-     * @brief getMetaConfidence -self explained
+     * @brief getMetaConfidence - self explained
      * @return confidence of the _id
      * @note metainformation is cleared each time tracker lost a face, after clear function returns DBL_MAX
      */
@@ -187,6 +187,15 @@ public:
      * @return how many frames this tracker tracks face
      */
     unsigned int getFaceTrackedFrames() const;
+    /**
+     * @brief setInProcessing should be used to report whether this tracker already reported that metaID == -1 or not
+     */
+    void setInProcessing(bool _val);
+    /**
+     * @brief is this tracker already reports that metaID == -1 or not
+     * @return self explained
+     */
+    bool inProcessing() const;
     //--------------------------------------------------------------------
 
 private:
@@ -224,6 +233,7 @@ private:
     cv::String m_metaInfo;
     int m_metaID;
     double m_metaConfidence;
+    bool m_inprocesisng;
 
     dlib::frontal_face_detector dlibfacedet;
     PrimaryFaceDetector m_primaryfacedetectortupe;

@@ -22,7 +22,8 @@ SOURCES += main.cpp \
     qfacerecognizer.cpp \
     qidentificationtaskposter.cpp \
     qmongodbclient.cpp \
-    qmongodbeventposter.cpp
+    qmongodbeventposter.cpp \
+    qframesdropper.cpp
 
 HEADERS += \
     qvideocapture.h \
@@ -32,7 +33,8 @@ HEADERS += \
     qfacerecognizer.h \
     qidentificationtaskposter.h \
     qmongodbclient.h \
-    qmongodbeventposter.h
+    qmongodbeventposter.h \
+    qframesdropper.h
 
 include( $${PWD}/../../Sharedfiles/opencv.pri )
 include( $${PWD}/../../Sharedfiles/openmp.pri )
