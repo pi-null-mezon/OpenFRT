@@ -40,9 +40,10 @@ void QIdentificationTaskPoster::run()
         QJsonParseError _jperror;
         QByteArray _replydata = _reply->readAll();
         QJsonObject _json = QJsonDocument::fromJson(_replydata,&_jperror).object();
+        _json["datetime"] = QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss");
         if(_jperror.error == QJsonParseError::NoError) {
             if(QString::compare(_json.value("status").toString(),"Success",Qt::CaseInsensitive) == 0) { // equal strings
-                qInfo("%s", _replydata.constData());
+                qInfo("%s", QJsonDocument(_json).toJson().constData());
                 double _distance = _json.value("distance").toDouble();
                 if(_distance < _json.value("distancethresh").toDouble()) {
                     emit labelPredicted(_json.value("label").toInt(),
