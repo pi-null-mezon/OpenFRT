@@ -14,8 +14,8 @@ public:
     void setRecognizerid(int value);
 
 signals:
-    void faceFound(const cv::Mat &faceImg, const cv::RotatedRect &rRect);
-    void faceWithoutLabelFound(const cv::Mat &_facemat, const cv::RotatedRect &_rrect);
+    void faceFound(const cv::Mat &faceImg);
+    void faceWithoutLabelFound(const cv::Mat &_facemat, const QUuid &_quuid);
     void frameProcessed();
 
 public slots:
@@ -35,7 +35,7 @@ public slots:
      * @param _info - string of the information about class
      * @param _rrect - target rectangle to search appropriate face tracker
      */
-    void setLabelForTheFace(int _id, double _confidence, const cv::String &_info, const cv::RotatedRect &_rrect);
+    void setLabelForTheFace(int _id, double _confidence, const cv::String &_info, const QUuid &_quuid);
     size_t getMaxFaces() const;
     void setVisualization(bool _value);
 

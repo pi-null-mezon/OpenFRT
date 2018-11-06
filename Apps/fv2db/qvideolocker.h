@@ -12,10 +12,10 @@ public:
     explicit QVideoLocker(QObject *parent = 0);
 
 signals:
-    void frameUpdated(const cv::Mat &_framemat, const cv::RotatedRect &_rrect);
+    void frameUpdated(const cv::Mat &_framemat, const QUuid &_quuid);
 
 public slots:
-    void updateFrame(const cv::Mat &_framemat, const cv::RotatedRect &_rrect);
+    void updateFrame(const cv::Mat &_framemat, const QUuid &_quuid);
     void unlock();
 
 private:

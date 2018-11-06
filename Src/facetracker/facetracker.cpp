@@ -412,6 +412,7 @@ void FaceTracker::__updateHistory(const cv::Rect &rect)
         for(uchar i = 0; i < m_historyLength; i++) {
             v_rectHistory[i] = rect;
         }
+        quuid = QUuid::createUuid();
         beginFlag = false;
     } else {                                       
         v_rectHistory[m_pos] = rect;
@@ -426,6 +427,7 @@ void FaceTracker::clearMetaData()
     m_metaInfo = cv::String();
     m_metaConfidence = DBL_MAX;
     m_inprocesisng = false;
+    quuid = QUuid();
 }
 
 uchar FaceTracker::getHistoryLength() const
@@ -458,6 +460,11 @@ void FaceTracker::setMetaData(int _id, double _confidence, const cv::String &_in
 int FaceTracker::__loop(int _d, int _size) const
 {
     return ((_d % _size) + _size) % _size;
+}
+
+QUuid FaceTracker::getQuuid() const
+{
+    return quuid;
 }
 
 cv::String FaceTracker::getMetaInfo() const

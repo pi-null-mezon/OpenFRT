@@ -16,16 +16,15 @@ QMultyFaceTracker::QMultyFaceTracker(uint _maxfaces, QObject *parent) : QObject(
 void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 {
     if(!inputImg.empty()) {
-        std::vector<cv::Mat> v_faces = m_tracker.getResizedFaceImages(inputImg, m_targetSize);
-        std::vector<cv::RotatedRect> v_rRects = m_tracker.getRotatedRects();        
+        std::vector<cv::Mat> v_faces = m_tracker.getResizedFaceImages(inputImg, m_targetSize);        
         for(std::size_t i = 0; i < v_faces.size(); i++) {            
-            //emit faceFound(v_faces[i], v_rRects[i]);
+            //emit faceFound(v_faces[i]);
             FaceTracker *_pfacetracker = m_tracker[static_cast<int>(i)];
             if((_pfacetracker->getMetaID() == -1) &&
                (_pfacetracker->getFaceTrackedFrames() > _pfacetracker->getHistoryLength()) &&
                (_pfacetracker->inProcessing() == false)) {
                 _pfacetracker->setInProcessing(true);
-                emit faceWithoutLabelFound(v_faces[i], v_rRects[i]);
+                emit faceWithoutLabelFound(v_faces[i], _pfacetracker->getQuuid());
             }
         }
     }
@@ -119,18 +118,12 @@ void QMultyFaceTracker::setFaceAlignmentMethod(FaceTracker::AlignMethod _method)
     m_tracker.setFaceAlignMethod(_method);
 }
 
-void QMultyFaceTracker::setLabelForTheFace(int _id, double _confidence, const cv::String &_info, const cv::RotatedRect &_rrect)
+void QMultyFaceTracker::setLabelForTheFace(int _id, double _confidence, const cv::String &_info, const QUuid &_quuid)
 {
-    cv::Rect _refrect = _rrect.boundingRect();
-
     FaceTracker *_ptracker;
-    cv::Rect _testrect;
-    float _thresholdarea;
     for(size_t i = 0; i < m_tracker.getMaxFaces(); ++i) {
         _ptracker = m_tracker[static_cast<int>(i)];
-        _testrect = _ptracker->getFaceRotatedRect().boundingRect();
-        _thresholdarea = _refrect.area() / (2.0f * _ptracker->getHistoryLength());
-        if((_refrect & _testrect).area() > _thresholdarea) {
+        if(_ptracker->getQuuid() == _quuid) {
             _ptracker->setMetaData(_id,_confidence,_info);
             _ptracker->setInProcessing(false);
             break;

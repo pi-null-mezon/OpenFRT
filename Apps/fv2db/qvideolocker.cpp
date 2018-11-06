@@ -4,12 +4,11 @@ QVideoLocker::QVideoLocker(QObject *parent) : QObject(parent)
 {    
 }
 
-void QVideoLocker::updateFrame(const cv::Mat &_framemat, const cv::RotatedRect &_rrect)
+void QVideoLocker::updateFrame(const cv::Mat &_framemat, const QUuid &_quuid)
 {
     if(m_locked == false) {
         __lock();
-
-        emit frameUpdated(_framemat, _rrect);
+        emit frameUpdated(_framemat, _quuid);
     }
 }
 

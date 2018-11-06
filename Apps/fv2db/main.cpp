@@ -206,10 +206,10 @@ int main(int argc, char *argv[])
     QObject::connect(&_qvideocapture, SIGNAL(frameUpdated(cv::Mat)), &_qframesdropper,SLOT(updateFrame(cv::Mat)));
     QObject::connect(&_qframesdropper,SIGNAL(frameUpdated(cv::Mat)), &_qmultyfacetracker, SLOT(enrollImage(cv::Mat)));
     QObject::connect(&_qmultyfacetracker,SIGNAL(frameProcessed()), &_qframesdropper, SLOT(passFrames()));
-    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,cv::RotatedRect)), &_qvideolocker, SLOT(updateFrame(cv::Mat,cv::RotatedRect)));
-    QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,cv::RotatedRect)), &_qfacerecognizer, SLOT(predict(cv::Mat,cv::RotatedRect)));
-    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,cv::RotatedRect)));
-    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,cv::RotatedRect)), &_qvideolocker, SLOT(unlock()));
+    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,QUuid)), &_qvideolocker, SLOT(updateFrame(cv::Mat,QUuid)));
+    QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,QUuid)), &_qfacerecognizer, SLOT(predict(cv::Mat,QUuid)));
+    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,QUuid)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,QUuid)));
+    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,QUuid)), &_qvideolocker, SLOT(unlock()));
 
     qInfo("Starting threads");
     // Let's organize threads

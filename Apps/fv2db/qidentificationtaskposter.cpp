@@ -10,10 +10,10 @@
 
 #include <opencv2/imgcodecs.hpp>
 
-QIdentificationTaskPoster::QIdentificationTaskPoster(const QString &_urlstr, const cv::Mat &_facemat, const cv::RotatedRect &_facerr, QObject *_parent) : QThread(_parent),
+QIdentificationTaskPoster::QIdentificationTaskPoster(const QString &_urlstr, const cv::Mat &_facemat, const QUuid &_quuid, QObject *_parent) : QThread(_parent),
     urlstr(_urlstr),
     facemat(_facemat),
-    facerr(_facerr)
+    quuid(_quuid.toByteArray())
 {
 }
 
@@ -48,17 +48,17 @@ void QIdentificationTaskPoster::run()
                     emit labelPredicted(_json.value("label").toInt(),
                                         _distance,
                                         _json.value("labelinfo").toString().toUtf8().constData(),
-                                        facerr);
+                                        quuid);
                     emit labelPredicted(_json.value("label").toInt(),
                                         _distance,
                                         _json.value("labelinfo").toString().toUtf8().constData(),
                                         facemat);
                 } else {
-                    emit labelPredicted(-1,-1.0,"Unknown",facerr);
+                    emit labelPredicted(-1,-1.0,"Unknown",quuid);
                 }
             } else {
                 qWarning("%s", _replydata.constData());
-                emit labelPredicted(-1,-1.0,"",facerr);
+                emit labelPredicted(-1,-1.0,"",quuid);
             }
         } else {
             qWarning("JSON parser error - %s", _jperror.errorString().toUtf8().constData());

@@ -7,12 +7,15 @@
 #ifndef FACETRACKER_H
 #define FACETRACKER_H
 
+#include <QUuid>
+
 #include <opencv2/core.hpp>
 #include <opencv2/objdetect.hpp>
 
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/shape_predictor.h>
 #include <dlib/opencv.h>
+
 
 class FaceTracker
 {
@@ -198,6 +201,8 @@ public:
     bool inProcessing() const;
     //--------------------------------------------------------------------
 
+    QUuid getQuuid() const;
+
 private:
     cv::Rect    __getAverageFaceRect() const;
     void        __updateHistory(const cv::Rect &rect);
@@ -237,6 +242,8 @@ private:
 
     dlib::frontal_face_detector dlibfacedet;
     PrimaryFaceDetector m_primaryfacedetectortupe;
+
+    QUuid quuid;
 };
 
 #endif // FACETRACKER_H

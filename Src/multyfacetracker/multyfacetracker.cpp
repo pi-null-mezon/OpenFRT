@@ -29,8 +29,8 @@ std::vector<cv::RotatedRect> MultyFaceTracker::searchFaces(const cv::Mat &Img)
         if(rRect.size.area() > 0) {
             v_rects.push_back(rRect);
             if(v_facetrackers.size() > 1) {
-                cv::rectangle(ImgCopy,rRect.boundingRect(), cv::Scalar(0,0,0),-1);
-                //cv::ellipse(ImgCopy,rRect,cv::Scalar(0,127,0),-1);
+                //cv::rectangle(ImgCopy,rRect.boundingRect(), cv::Scalar(0,0,0),-1);
+                cv::ellipse(ImgCopy,rRect,cv::Scalar(0,0,0),-1);
             }
         } else {
             for(uint j = i; j < v_facetrackers.size(); ++j) {
