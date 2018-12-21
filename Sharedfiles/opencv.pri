@@ -1,5 +1,5 @@
 #--------------------------------------------------------OPENCV----------------------------------------------------
-OPENCV_VERSION = 330
+OPENCV_VERSION = 343
 
 win32 {
     #Specify a path to the build directory of opencv library and library version    
