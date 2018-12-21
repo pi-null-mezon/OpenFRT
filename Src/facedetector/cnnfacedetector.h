@@ -17,7 +17,7 @@ class CNNFaceDetector: public FaceDetector
 public:
     CNNFaceDetector(const std::string &_txtfilename, const std::string &_modelfilename, float _confidenceThreshold);
     virtual ~CNNFaceDetector();
-    std::vector<cv::Rect> detectFaces(InputArray &_img) const;
+    std::vector<cv::Rect> detectFaces(InputArray &_img) const override;
     static Ptr<FaceDetector> createDetector(const std::string &_txtfilename="deploy.prototxt",
                                             const std::string &_modelfilename="res10_300x300_ssd_iter_140000_fp16.caffemodel",
                                             float _confidenceThreshold=0.5f);
