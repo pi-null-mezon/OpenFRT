@@ -5,54 +5,71 @@
 
 namespace cv { namespace ofrt {
 
-class MultiFaceTracker
-{
-public:
-    MultiFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, uint _historyframes=4);
-    /**
-        * @brief Search faces, then crop, resize and return them
-        * @param Img - input image
-        * @param size - output images size
-        * @return vector of resized faces images
-        */
-    std::vector<cv::Mat> getResizedFaceImages(const cv::Mat &Img, const cv::Size size);
-
-private:
-    cv::Ptr<cv::ofrt::FaceDetector> dPtr;
-    uint historyframes;
-
-    float xPortion;
-    float yPortion;
-    float xShift;
-    float yShift;
-};
-
+/**
+ * @brief The TrackedFace class
+ */
 class TrackedFace
 {
 public:
-    TrackedFace(size_t _historylength);
+    TrackedFace(int _historylength=8); // controls how long face should not be dropped
 
-    void resetHistory();
     void clearMetadata();
     void updatePosition(const cv::Rect &_brect);
-    void setMetaData(int _id, double _confidence, const cv::String &_info);
-    cv::RotatedRect getRotatedRect() const;
+    void decreaseFramesTracked();
+    void setMetaData(int _id, double _distance, const cv::String &_info);
+    void setPosted2Srv(bool _value);
+    cv::Rect getRect(int _averagelast) const;
+
+
+    int getFramesTracked() const;
+
+    unsigned long getUuid() const;
+    void setUuid(unsigned long value);
 
 private:
-    // Here we will store history of face positions
-    std::vector<cv::Rect> vhistoryrects;
-    int                   pos;
-    // Helpers
-    bool        posted2Srv; // posted to identification server
-    size_t      framesTracked; // how long face is tracked
-    // This params will be used to store recognition result for face
-    cv::String  metaInfo;
-    int         metaId;
-    double      metaDistance;
-    // This param will be used to identify face recognition task
-    size_t      uuid;
-    // Face coords holder
-    cv::RotatedRect rrect;
+
+    std::vector<cv::Rect>   vhistoryrects;  // history of face positions
+    int                     historylength;  // length of history
+    int                     pos;            // current position in vhistoryrects
+    bool                    posted2Srv;     // posted to identification server
+    int                     framesTracked;  // how long face is tracked
+    cv::String              metaInfo;
+    int                     metaId;
+    double                  metaDistance;
+    unsigned long           uuid;           // unique identifier of the tracked face
+};
+
+/**
+ * @brief The MultiFaceTracker class
+ */
+class MultiFaceTracker
+{
+public:
+    MultiFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, size_t maxfaces=4);
+    /**
+     * @brief Search faces, then crop, resize and return them
+     * @param Img - input image
+     * @param size - output images size
+     * @return vector of resized faces images
+     */
+    std::vector<cv::Mat> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast=4);
+    /**
+     * @brief getTrackedFaces get information about tracked faces
+     * @return vector of tracked faces
+     */
+    std::vector<TrackedFace> getTrackedFaces() const;
+
+
+
+private:
+    cv::Mat         __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
+    void            __enrollImage(const cv::Mat &_img);
+    unsigned long   __nextUUID();
+
+    cv::Ptr<cv::ofrt::FaceDetector> dPtr;    
+    std::vector<TrackedFace> vtrackedfaces;
+
+    unsigned long uuid;
 };
 
 }}

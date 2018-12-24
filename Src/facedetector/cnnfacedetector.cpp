@@ -42,7 +42,10 @@ std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
             int bottom = (int)(data[i + 6] * _img.rows());
             int width = right - left + 1;
             int height = bottom - top + 1;
-            boxes.push_back(Rect(left, top, width, height));
+            boxes.push_back(Rect(left + getXShift()*width - width*(getXPortion() - 1.0f)/2.0f,
+                                 top + getYShift()*height - height*(getYPortion() - 1.0f)/2.0f,
+                                 width*getXPortion(),
+                                 height*getYPortion()));
         }
     }
     return boxes;

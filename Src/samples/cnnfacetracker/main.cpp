@@ -7,6 +7,7 @@
 
 #include "facedetector.h"
 #include "cnnfacedetector.h"
+#include "multifacetracker.h"
 
 using namespace std;
 
@@ -38,16 +39,33 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
+    cv::ofrt::MultiFaceTracker mfacetracker(dPtr,4);
 
     cv::Mat framemat;
     double _frametimems, _timemark = cv::getTickCount();
     std::string timestr;
     while(videocapture.read(framemat)) {       
         // Frame processing block
-        std::vector<cv::Rect> _faces = dPtr->detectFaces(framemat);
+        /*std::vector<cv::Rect> _faces = dPtr->detectFaces(framemat);
         for(size_t i = 0; i < _faces.size(); ++i) {
             cv::rectangle(framemat,_faces[i],cv::Scalar(0,255,127),1,cv::LINE_AA);
+        }*/
+
+        auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(150,150));
+        auto _vtrackedfaces = mfacetracker.getTrackedFaces();
+        for(size_t i = 0; i < _vtrackedfaces.size(); ++i) {
+            if(_vtrackedfaces[i].getFramesTracked() > 0) {
+                string label = std::to_string(_vtrackedfaces[i].getUuid());
+                cv::Rect _rect = _vtrackedfaces[i].getRect(4);
+                cv::rectangle(framemat,_rect,cv::Scalar(0,255,127),1,cv::LINE_AA);
+                cv::putText(framemat,label,_rect.tl() - cv::Point(2,2),cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0,0,255),1,cv::LINE_AA);
+            }
         }
+        /*for(size_t i = 0; i < _vfaces.size(); ++i) {
+            cv::imshow(std::to_string(i),_vfaces[i]);
+        }*/
+
+
         // Performance measurements
         _frametimems = 1000.0 * (cv::getTickCount() - _timemark) / cv::getTickFrequency();
         _timemark = cv::getTickCount();
