@@ -40,6 +40,8 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
             float _pointsize = _imgmat.cols * 0.000390625f + 0.25;
             int _fonttype = CV_FONT_HERSHEY_SIMPLEX;
             int _thickness = (int)std::floor( _imgmat.cols/1280.0f );
+            if(_thickness < 1)
+                _thickness = 1;
             for(size_t i = 0 ; i < m_tracker.getMaxFaces(); i++) {
                 const FaceTracker *_ptracker = m_tracker.at(static_cast<int>(i));
                 if( _ptracker->getFaceRotatedRect().size.area() > 1.0f /*_ptracker->getMetaID() > -1*/) {
