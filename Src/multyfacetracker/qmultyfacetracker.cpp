@@ -3,34 +3,31 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include <QDateTime>
-
-QMultyFaceTracker::QMultyFaceTracker(uint _maxfaces, QObject *parent) : QObject(parent)
+QMultyFaceTracker::QMultyFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_cvptrfacedet, uint _maxfaces, QObject *parent) : QObject(parent),
+    targetSize(cv::Size(150,150)),
+    visualization(false)
 {
     qRegisterMetaType<cv::RotatedRect>("cv::RotatedRect");
     qRegisterMetaType<cv::String>("cv::String");
 
-    setMaxFaces(_maxfaces);
+    multyfacetracker.setFaceDetector(_cvptrfacedet,static_cast<size_t>(_maxfaces));
 }
 
 void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 {
     if(!inputImg.empty()) {
-        std::vector<cv::Mat> v_faces = m_tracker.getResizedFaceImages(inputImg, m_targetSize);        
-        for(std::size_t i = 0; i < v_faces.size(); i++) {            
-            //emit faceFound(v_faces[i]);
-            FaceTracker *_pfacetracker = m_tracker[static_cast<int>(i)];
-            if((_pfacetracker->getMetaID() == -1) &&
-               (_pfacetracker->getFaceTrackedFrames() > _pfacetracker->getHistoryLength()) &&
-               (_pfacetracker->inProcessing() == false)) {
-                _pfacetracker->setInProcessing(true);
-                emit faceWithoutLabelFound(v_faces[i], _pfacetracker->getQuuid());
+        std::vector<cv::Mat> v_faces = multyfacetracker.getResizedFaceImages(inputImg, targetSize,1);
+        for(std::size_t i = 0; i < v_faces.size(); i++) {
+            cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(i);
+            if((_ptrackedface->getMetaId() == -1) && (_ptrackedface->getPosted2Srv() == false)) {
+                emit faceWithoutLabelFound(v_faces[i], _ptrackedface->getUuid());
+                _ptrackedface->setPosted2Srv(true);
             }
         }
     }
 
     // visualization
-    if(f_visualization) {
+    if(visualization) {
         static int64 _ticks;
         static int64 _temp;
         _temp = cv::getTickCount();
@@ -39,31 +36,33 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
             cv::Mat _imgmat = inputImg;
             float _pointsize = _imgmat.cols * 0.000390625f + 0.25;
             int _fonttype = CV_FONT_HERSHEY_SIMPLEX;
-            int _thickness = (int)std::floor( _imgmat.cols/1280.0f );
+            int _thickness = std::floor( _imgmat.cols/1280.0f );
             if(_thickness < 1)
                 _thickness = 1;
-            for(size_t i = 0 ; i < m_tracker.getMaxFaces(); i++) {
-                const FaceTracker *_ptracker = m_tracker.at(static_cast<int>(i));
-                if( _ptracker->getFaceRotatedRect().size.area() > 1.0f /*_ptracker->getMetaID() > -1*/) {
-                    cv::RotatedRect _rrect = _ptracker->getFaceRotatedRect();
-                    cv::Point2f _vertices[4];
-                    _rrect.points(_vertices);
+            for(size_t i = 0 ; i < multyfacetracker.maxFaces(); i++) {
+                const cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(i);
+                if( _ptrackedface->getFramesTracked() > 0 ) {
+                    const cv::Rect _rect = _ptrackedface->getRect(1);
+                    cv::rectangle(_imgmat,_rect,cv::Scalar(0,255,0), _thickness, CV_AA);
 
-                    for(int j = 0; j < 4; j++)
-                        cv::line(_imgmat, _vertices[j], _vertices[(j+1)%4], cv::Scalar(0,255,0), _thickness, CV_AA);
+                    const cv::Point _tl(_rect.x,_rect.y);
+                    const cv::Point _bl(_rect.x,_rect.y+_rect.height);
 
+                    // Draw face tracking info
+                    std::string _ftinfo = std::string("FD ") + std::to_string(i) + std::string(" (uuid: ") + std::to_string(_ptrackedface->getUuid()) + std::string(")");
+                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(4+_pointsize,20+_pointsize), _fonttype, 0.5, cv::Scalar(0,0,255), _thickness, CV_AA);
                     // Draw label info
-                    cv::String _infostr = utf8cyr2utf8latin( _ptracker->getMetaInfo() );
-                    cv::putText(_imgmat, _infostr, _vertices[1] - cv::Point2f(4.f+_pointsize,4.f+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _infostr, _vertices[1] - cv::Point2f(4.f+3.f*_pointsize,4.f+3.f*_pointsize), _fonttype, _pointsize, cv::Scalar(0,255,0), _thickness, CV_AA);
-                    // Draw confidence
-                    cv::String _confstr = "Dist.:" + cv::String(QString::number(_ptracker->getMetaID() > -1 ? _ptracker->getMetaConfidence(): -1.0, 'f', 2).toLocal8Bit().constData());
-                    cv::putText(_imgmat, _confstr, _vertices[0] - cv::Point2f(-4.f-_pointsize,4.f+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _confstr, _vertices[0] - cv::Point2f(-4.f-3.f*_pointsize,4.f+3.f*_pointsize), _fonttype, _pointsize, cv::Scalar(255,255,255), _thickness, CV_AA);
+                    cv::String _infostr = utf8cyr2utf8latin( _ptrackedface->getMetaInfo() );
+                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, cv::Scalar(0,255,0), _thickness, CV_AA);
+                    // Draw distance
+                    cv::String _confstr = "Dist.:" + cv::String(QString::number(_ptrackedface->getMetaId() > -1 ? _ptrackedface->getMetaDistance(): -1.0, 'f', 2).toLocal8Bit().constData());
+                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, cv::Scalar(255,255,255), _thickness, CV_AA);
                     // Draw class label
-                    cv::String _labelstr = "ID:" + cv::String(QString::number(_ptracker->getMetaID()).toLocal8Bit().constData());
-                    cv::putText(_imgmat, _labelstr, _vertices[1] + cv::Point2f(4.f+5.f*_pointsize,4.f+30.f*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _labelstr, _vertices[1] + cv::Point2f(4.f+5.f*_pointsize,4.f+27.f*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,255), _thickness, CV_AA);
+                    cv::String _labelstr = "ID:" + cv::String(QString::number(_ptrackedface->getMetaId()).toLocal8Bit().constData());
+                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+30*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+27*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,255), _thickness, CV_AA);
                 }
             }
             // Control time
@@ -80,82 +79,27 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
     emit frameProcessed();
 }
 
-bool QMultyFaceTracker::setFaceClassifier(cv::CascadeClassifier *pointer)
-{
-    return m_tracker.setFaceClassifier(pointer);
-}
-
-void QMultyFaceTracker::setDlibFaceShapePredictor(dlib::shape_predictor *pointer)
-{
-    m_tracker.setDlibFaceShapePredictor(pointer);
-}
-
-bool QMultyFaceTracker::setEyeClassifier(cv::CascadeClassifier *pointer)
-{
-    return m_tracker.setEyeClassifier(pointer);
-}
-
 void QMultyFaceTracker::setTargetFaceSize(const cv::Size &size)
 {
-    m_targetSize = size;
+    targetSize = size;
 }
 
-void QMultyFaceTracker::setMaxFaces(uint value)
+void QMultyFaceTracker::enableVisualization(bool _value)
 {
-    m_tracker.setMaxFaces(value);
+    visualization = _value;
 }
 
-void QMultyFaceTracker::setFaceRectPortions(float _xP, float _yP)
-{
-    m_tracker.setFaceRectPortions(_xP,_yP);
-}
 
-void QMultyFaceTracker::setFaceRectShifts(float _xShift, float _yShift)
+void QMultyFaceTracker::setLabelForTheFace(int _id, double _distance, const cv::String &_info, unsigned long _uuid)
 {
-    m_tracker.setFaceRectShifts(_xShift, _yShift);
-}
-
-void QMultyFaceTracker::setFaceAlignmentMethod(FaceTracker::AlignMethod _method)
-{
-    m_tracker.setFaceAlignMethod(_method);
-}
-
-void QMultyFaceTracker::setLabelForTheFace(int _id, double _confidence, const cv::String &_info, const QUuid &_quuid)
-{
-    FaceTracker *_ptracker;
-    for(size_t i = 0; i < m_tracker.getMaxFaces(); ++i) {
-        _ptracker = m_tracker[static_cast<int>(i)];
-        if(_ptracker->getQuuid() == _quuid) {
-            _ptracker->setMetaData(_id,_confidence,_info);
-            _ptracker->setInProcessing(false);
+    for(size_t i = 0; i < multyfacetracker.maxFaces(); ++i) {
+        cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(i);
+        if(_ptrackedface->getUuid() == _uuid) {
+            _ptrackedface->setMetaData(_id,_distance,_info);
+            _ptrackedface->setPosted2Srv(false);
             break;
         }
     }
-}
-
-size_t QMultyFaceTracker::getMaxFaces() const
-{
-    return m_tracker.getMaxFaces();
-}
-
-void QMultyFaceTracker::setVisualization(bool _value)
-{
-    f_visualization = _value;
-}
-
-void QMultyFaceTracker::setVerbose(bool _enable)
-{
-    f_verbose = _enable;
-}
-
-int QMultyFaceTracker::getRecognizerid() const
-{
-    return recognizerid;
-}
-
-void QMultyFaceTracker::setRecognizerid(int value)
-{
-    recognizerid = value;
 }
 
 cv::String utf8cyr2utf8latin(const cv::String &_cvcyrstr)

@@ -38,7 +38,7 @@ HEADERS += \
 
 include( $${PWD}/../../Sharedfiles/opencv.pri )
 include( $${PWD}/../../Sharedfiles/openmp.pri )
-include( $${PWD}/../../Sharedfiles/dlib.pri )
+#include( $${PWD}/../../Sharedfiles/dlib.pri )
 include( $${PWD}/../../Src/multyfacetracker/facetracker.pri )
 
 # Copy config file to output directory

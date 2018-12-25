@@ -1,14 +1,15 @@
 #include "qvideolocker.h"
 
-QVideoLocker::QVideoLocker(QObject *parent) : QObject(parent)
+QVideoLocker::QVideoLocker(QObject *parent) : QObject(parent),
+  locked(false)
 {    
 }
 
-void QVideoLocker::updateFrame(const cv::Mat &_framemat, const QUuid &_quuid)
+void QVideoLocker::updateFrame(const cv::Mat &_framemat, unsigned long _uuid)
 {
-    if(m_locked == false) {
+    if(locked == false) {
         __lock();
-        emit frameUpdated(_framemat, _quuid);
+        emit frameUpdated(_framemat, _uuid);
     }
 }
 
@@ -19,14 +20,14 @@ void QVideoLocker::unlock()
 
 void QVideoLocker::__lock()
 {
-    if(!m_locked) {
-        m_locked = true;
+    if(!locked) {
+        locked = true;
     }
 }
 
 void QVideoLocker::__unlock()
 {
-    if(m_locked) {
-        m_locked = false;
+    if(locked) {
+        locked = false;
     }
 }

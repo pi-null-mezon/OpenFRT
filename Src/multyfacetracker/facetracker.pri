@@ -1,15 +1,12 @@
-SOURCES += 	$${PWD}/../facetracker/facetracker.cpp \
-                $${PWD}/../multyfacetracker/multyfacetracker.cpp \
-                $${PWD}/../multyfacetracker/qmultyfacetracker.cpp
+SOURCES += $${PWD}/multyfacetracker.cpp \
+        $${PWD}/qmultyfacetracker.cpp \
+        $${PWD}/../facedetector/facedetector.cpp \
+        $${PWD}/../facedetector/cnnfacedetector.cpp
+					
+HEADERS += $${PWD}/multyfacetracker.h \
+        $${PWD}/qmultyfacetracker.h \
+        $${PWD}/../facedetector/facedetector.h \
+        $${PWD}/../facedetector/cnnfacedetector.h
 
-HEADERS += 	$${PWD}/../facetracker/facetracker.h \
-                $${PWD}/../multyfacetracker/multyfacetracker.h \
-                $${PWD}/../multyfacetracker/qmultyfacetracker.h
-
-INCLUDEPATH += 	$${PWD}/../facetracker \
-                $${PWD}/../multyfacetracker
-
-DEPENDPATH += $${PWD}/../facetracker \
-              $${PWD}/../multyfacetracker
-
-	
+INCLUDEPATH += $${PWD} \
+            $${PWD}/../facedetector

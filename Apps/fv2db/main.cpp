@@ -15,6 +15,7 @@
 #include "qfacerecognizer.h"
 #include "qmongodbclient.h"
 #include "qframesdropper.h"
+#include "cnnfacedetector.h"
 
 QFile *p_logfile = nullptr;
 
@@ -139,33 +140,29 @@ int main(int argc, char *argv[])
 
     // Ok, now the video source should be opened, let's prepare face tracker
     qInfo("Trying to load face detection resources");
-    QMultyFaceTracker _qmultyfacetracker(_settings.value("Facetracking/Maxfaces",7).toUInt());
-    _qmultyfacetracker.setFaceRectPortions(_settings.value("Facetracking/FaceHPortion",1.35).toFloat(),
-                                           _settings.value("Facetracking/FaceVPortion",1.75).toFloat());
+    QFileInfo _fileinfo(a.applicationDirPath().append("/deploy.prototxt"));
+    if(_fileinfo.exists() == false) {
+        qWarning("  Can not find face detector prototxt file! Abort...");
+        return 6;
+    }
+    _fileinfo.setFile(a.applicationDirPath().append("/res10_300x300_ssd_iter_140000_fp16.caffemodel"));
+    if(_fileinfo.exists() == false) {
+        qWarning("  Can not find face detector model file! Abort...");
+        return 7;
+    }
+    cv::Ptr<cv::ofrt::FaceDetector> ptrFD = cv::ofrt::CNNFaceDetector::createDetector(a.applicationDirPath().append("/deploy.prototxt").toStdString(),
+                                                                                      a.applicationDirPath().append("/res10_300x300_ssd_iter_140000_fp16.caffemodel").toStdString());
+
+    ptrFD->setPortions(_settings.value("Facetracking/FaceHPortion",1.4).toFloat(),
+                      _settings.value("Facetracking/FaceVPortion",1.2).toFloat());
+
+    QMultyFaceTracker _qmultyfacetracker(ptrFD,_settings.value("Facetracking/Maxfaces",64).toUInt());
     _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
                                                   _settings.value("Facetracking/FaceVSize",226).toInt()));
 
-    cv::CascadeClassifier _facecascade(a.applicationDirPath().append("/haarcascade_frontalface_alt2.xml").toUtf8().constData());
-    if(_facecascade.empty()) {
-        _qvideocapture.close();
-        qWarning("  Can not load face classifier cascade! Abort...");
-        return 6;
-    } else {
-        _qmultyfacetracker.setFaceClassifier(&_facecascade);
-    }
-    dlib::shape_predictor _dlibfaceshapepredictor;
-    try {
-        dlib::deserialize(a.applicationDirPath().append("/shape_predictor_5_face_landmarks.dat").toStdString()) >> _dlibfaceshapepredictor;
-    }
-    catch(...) {
-        qWarning("  Can not load dlib's face shape predictor resources! Abort...");
-        return 7;
-    }
-   _qmultyfacetracker.setDlibFaceShapePredictor(&_dlibfaceshapepredictor);
-   _qmultyfacetracker.setFaceAlignmentMethod( FaceTracker::FaceShape );
    if(_visualization == false)
        _visualization = _settings.value("Miscellaneous/Visualization",false).toBool();
-   _qmultyfacetracker.setVisualization(_visualization);
+   _qmultyfacetracker.enableVisualization(_visualization);
    qInfo("  Success");
 
     // Create face recognizer, later we also place them in the separate thread
@@ -206,10 +203,10 @@ int main(int argc, char *argv[])
     QObject::connect(&_qvideocapture, SIGNAL(frameUpdated(cv::Mat)), &_qframesdropper,SLOT(updateFrame(cv::Mat)));
     QObject::connect(&_qframesdropper,SIGNAL(frameUpdated(cv::Mat)), &_qmultyfacetracker, SLOT(enrollImage(cv::Mat)));
     QObject::connect(&_qmultyfacetracker,SIGNAL(frameProcessed()), &_qframesdropper, SLOT(passFrames()));
-    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,QUuid)), &_qvideolocker, SLOT(updateFrame(cv::Mat,QUuid)));
-    QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,QUuid)), &_qfacerecognizer, SLOT(predict(cv::Mat,QUuid)));
-    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,QUuid)), &_qmultyfacetracker, SLOT(setLabelForTheFace(int,double,cv::String,QUuid)));
-    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,QUuid)), &_qvideolocker, SLOT(unlock()));
+    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,unsigned long)), &_qvideolocker, SLOT(updateFrame(cv::Mat,unsigned long)));
+    QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,unsigned long)), &_qfacerecognizer, SLOT(predict(cv::Mat,unsigned long)));
+    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,unsigned long)), &_qmultyfacetracker,SLOT(setLabelForTheFace(int,double,cv::String,unsigned long)));
+    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,unsigned long)), &_qvideolocker, SLOT(unlock()));
 
     qInfo("Starting threads");
     // Let's organize threads

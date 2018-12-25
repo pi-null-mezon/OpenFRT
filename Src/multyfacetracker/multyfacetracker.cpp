@@ -1,175 +1,218 @@
 #include "multyfacetracker.h"
 
-#include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-MultyFaceTracker::MultyFaceTracker(uint maxfaces, uchar length, FaceTracker::AlignMethod method)
+namespace cv { namespace ofrt {
+
+MultyFaceTracker::MultyFaceTracker() :
+    uuid(0)
 {
-    m_historylength = length;
-    m_alignmethod = method;
-    setMaxFaces(maxfaces);
 }
 
-MultyFaceTracker::~MultyFaceTracker()
+MultyFaceTracker::MultyFaceTracker(const cv::Ptr<FaceDetector> &_ptr, size_t _maxfaces) :
+    dPtr(_ptr),
+    uuid(0)
 {
-    for(uint i = 0; i < v_facetrackers.size(); i++)
-        delete v_facetrackers[i];
+    vtrackedfaces.resize(_maxfaces);
 }
 
-std::vector<cv::RotatedRect> MultyFaceTracker::searchFaces(const cv::Mat &Img)
+std::vector<Mat> MultyFaceTracker::getResizedFaceImages(const Mat &_img, const Size &_size, int _averagelast)
 {
-    cv::Mat ImgCopy = Img.clone();
-    std::vector<cv::RotatedRect> v_rects;
-    for(uint i = 0; i < v_facetrackers.size(); i++) {
-		
-		// multiple facetrackers are used because each one of them stores face location history
-        FaceTracker *pt_faceTracker = v_facetrackers[i];
-        cv::RotatedRect rRect = pt_faceTracker->searchFace(ImgCopy);
+    __enrollImage(_img);
+    std::vector<Mat> _vfaces;
+    _vfaces.reserve(vtrackedfaces.size());
+    cv::Rect _imgboundingrect(0,0,_img.cols,_img.rows);
+    for(size_t i = 0; i < vtrackedfaces.size(); ++i) {
+        if(vtrackedfaces[i].getFramesTracked() > 0)
+            _vfaces.push_back(__cropInsideFromCenterAndResize(_img(vtrackedfaces[i].getRect(_averagelast) & _imgboundingrect),_size));
+    }
+    return _vfaces;
+}
 
-        if(rRect.size.area() > 0) {
-            v_rects.push_back(rRect);
-            if(v_facetrackers.size() > 1) {
-                //cv::rectangle(ImgCopy,rRect.boundingRect(), cv::Scalar(0,0,0),-1);
-                cv::ellipse(ImgCopy,rRect,cv::Scalar(0,0,0),-1);
+std::vector<TrackedFace> MultyFaceTracker::getTrackedFaces() const
+{
+    return vtrackedfaces;
+}
+
+TrackedFace *MultyFaceTracker::at(size_t i)
+{
+    return &vtrackedfaces[i];
+}
+
+size_t MultyFaceTracker::maxFaces() const
+{
+    return vtrackedfaces.size();
+}
+
+void MultyFaceTracker::setFaceDetector(const cv::Ptr<FaceDetector> &_ptr, size_t _maxfaces)
+{
+    dPtr = _ptr;
+    vtrackedfaces.resize(_maxfaces);
+}
+
+Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Size &size)
+{
+    cv::Rect2f roiRect(0,0,0,0);
+    if((float)input.cols/input.rows > (float)size.width/size.height) {
+        roiRect.height = (float)input.rows;
+        roiRect.width = input.rows * (float)size.width/size.height;
+        roiRect.x = (input.cols - roiRect.width)/2.0f;
+    } else {
+        roiRect.width = (float)input.cols;
+        roiRect.height = input.cols * (float)size.height/size.width;
+        roiRect.y = (input.rows - roiRect.height)/2.0f;
+    }
+    roiRect &= cv::Rect2f(0, 0, (float)input.cols, (float)input.rows);
+    cv::Mat output;
+    if(roiRect.area() > 0)  {
+        cv::Mat croppedImg(input, roiRect);
+        int interpolationMethod = CV_INTER_AREA;
+        if(size.area() > roiRect.area())
+            interpolationMethod = CV_INTER_CUBIC;
+        cv::resize(croppedImg, output, size, 0, 0, interpolationMethod);
+    }
+    return output;
+}
+
+void MultyFaceTracker::__enrollImage(const Mat &_img)
+{
+    std::vector<cv::Rect> vrects = dPtr->detectFaces(_img);
+    std::vector<bool>     alreadyused(vrects.size(),false);
+
+    for(size_t i = 0; i < vtrackedfaces.size(); ++i) {
+        TrackedFace &_tf = vtrackedfaces[i];
+        bool updated = false;
+        for(size_t j = 0; j < vrects.size(); ++j) {
+            if(alreadyused[j] == false) {
+                if(_tf.getFramesTracked() > 0) {
+                    cv::Rect _lastrect = _tf.getRect(1);
+                    if((_lastrect & vrects[j]).area() > ((_lastrect.area() + vrects[j].area()) / 6)) {
+                        _tf.updatePosition(vrects[j]);
+                        alreadyused[j] = true;
+                        updated = true;
+                        break;
+                    }
+                } else { // new face
+                    _tf.updatePosition(vrects[j]);
+                    _tf.setUuid(__nextUUID()); // generate new guid
+                    alreadyused[j] = true;
+                    updated = true;
+                    break;
+                }
             }
-        } else {
-            for(uint j = i; j < v_facetrackers.size(); ++j) {
-                FaceTracker *_ptracker = v_facetrackers[j];
-                _ptracker->clearMetaData();
-                _ptracker->resetHistory();
-            }
-            break;
+        }
+        if(updated == false) {
+            _tf.decreaseFramesTracked();
         }
     }
-    m_facesFound = (uint)v_rects.size();
-    return v_rects;
 }
 
-bool MultyFaceTracker::setEyeClassifier(cv::CascadeClassifier *pointer)
+unsigned long MultyFaceTracker::__nextUUID()
 {
-    for(uint i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *pt_faceTracker = v_facetrackers[i];
-        if(!pt_faceTracker->setEyeClassifier(pointer))
-            return false;
+    return ++uuid;
+}
+
+
+TrackedFace::TrackedFace(int _historylength) :
+    pos(0),
+    framesTracked(0)
+{
+    historylength = _historylength;
+    vhistoryrects.resize(historylength,cv::Rect(0,0,0,0));
+    clearMetadata();
+}
+
+void TrackedFace::clearMetadata()
+{
+    metaId = -1;
+    metaInfo = "Identification...";
+    metaDistance = -1;
+    posted2Srv = false;
+}
+
+void TrackedFace::updatePosition(const Rect &_brect)
+{
+    if(framesTracked == 0) {
+        pos = 0;
+        for(size_t i = 0; i < vhistoryrects.size(); ++i)
+            vhistoryrects[i] = _brect;
+    } else {
+        vhistoryrects[pos] = _brect;
     }
-    return true;
+    framesTracked = framesTracked <= historylength ? framesTracked + 1 : historylength;
+    pos = (pos + 1) % historylength;
 }
 
-void MultyFaceTracker::setDlibFaceShapePredictor(dlib::shape_predictor *pointer)
+void TrackedFace::decreaseFramesTracked()
 {
-    for(uint i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *pt_faceTracker = v_facetrackers[i];
-        pt_faceTracker->setFaceShapePredictor(pointer);
-    }
-}
-
-bool MultyFaceTracker::setFaceClassifier(cv::CascadeClassifier *pointer)
-{
-    for(uint i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *pt_faceTracker = v_facetrackers[i];
-        if(!pt_faceTracker->setFaceClassifier(pointer))
-            return false;
-    }
-    return true;
-}
-
-std::vector<cv::Mat> MultyFaceTracker::getResizedFaceImages(const cv::Mat &Img, const cv::Size size)
-{
-    cv::Mat ImgCopy = Img.clone();
-
-    std::vector<cv::Mat> v_facesImages;
-    for(uint i = 0; i < v_facetrackers.size(); i++) {
-
-        FaceTracker *pt_faceTracker = v_facetrackers[i];
-        cv::Mat faceImage = pt_faceTracker->getResizedFaceImage(ImgCopy, size);
-        if(!faceImage.empty()) {
-            v_facesImages.push_back(faceImage);
-            if(v_facetrackers.size() > 1) {
-                cv::rectangle(ImgCopy,pt_faceTracker->getFaceRotatedRect().boundingRect(), cv::Scalar(0,0,0),-1);
-                //cv::ellipse(ImgCopy,pt_faceTracker->getFaceRotatedRect(),cv::Scalar(0,127,0),-1);
-            }
-        } else {
-            //std::cout << "-----------" << std::endl;
-            for(uint j = i; j < v_facetrackers.size(); ++j) {
-                FaceTracker *_ptracker = v_facetrackers[j];
-                _ptracker->clearMetaData();
-                _ptracker->resetHistory();
-                //std::cout << j << ") reset" << std::endl;
-            }
-            break;
-        }
-    }
-    m_facesFound = (uint)v_facesImages.size();
-    return v_facesImages;
-}
-
-std::vector<cv::RotatedRect> MultyFaceTracker::getRotatedRects() const
-{
-    std::vector<cv::RotatedRect> v_rRects;
-    for(uint i = 0; i < m_facesFound; i++) {
-        FaceTracker *tracker = v_facetrackers[i];
-        v_rRects.push_back(tracker->getFaceRotatedRect());
-    }
-    return v_rRects;
-}
-
-void MultyFaceTracker::setMaxFaces(uint maxfaces)
-{
-    for(uint i = 0; i < v_facetrackers.size(); i++)
-        delete v_facetrackers[i];
-    v_facetrackers.clear();
-
-    m_facesFound = 0;
-    for(uint i = 0; i < maxfaces; i++)
-        v_facetrackers.push_back(new FaceTracker(m_historylength, m_alignmethod));
-}
-
-size_t MultyFaceTracker::getMaxFaces() const
-{
-    return v_facetrackers.size();
-}
-
-void MultyFaceTracker::setFaceRectPortions(float xPortion, float yPortion)
-{
-    for(size_t i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *tracker = v_facetrackers[i];
-        tracker->setFaceRectPortions(xPortion,yPortion);
+    framesTracked = framesTracked > 0 ? framesTracked - 1 : 0;
+    if(framesTracked == 0) {
+        clearMetadata();
     }
 }
 
-void MultyFaceTracker::setFaceRectShifts(float _xShift, float _yShift)
+void TrackedFace::setMetaData(int _id, double _distance, const String &_info)
 {
-    for(size_t i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *tracker = v_facetrackers[i];
-        tracker->setFaceRectShifts(_xShift,_yShift);
+    metaId = _id;
+    metaDistance = _distance;
+    metaInfo = _info;
+}
+
+Rect TrackedFace::getRect(int _averagelast) const
+{
+    float _x = 0.0f, _y = 0.0f, _w = 0.0f, _h = 0.0f;
+    for(int i = 0; i < _averagelast; ++i) {
+        const cv::Rect &_rect = vhistoryrects[ (((pos - 1 - i) % historylength) + historylength) % historylength];
+        _x += _rect.x;
+        _y += _rect.y;
+        _w += _rect.width;
+        _h += _rect.height;
     }
+    _x /= _averagelast;
+    _y /= _averagelast;
+    _w /= _averagelast;
+    _h /= _averagelast;
+    return cv::Rect(_x,_y,_w,_h);
 }
 
-const FaceTracker *MultyFaceTracker::at(int i)
+int TrackedFace::getFramesTracked() const
 {
-    return v_facetrackers[i];
+    return framesTracked;
 }
 
-FaceTracker *MultyFaceTracker::operator[](int i)
+int TrackedFace::getMetaId() const
 {
-    return v_facetrackers[i];
+    return metaId;
 }
 
-void MultyFaceTracker::setFaceAlignMethod(FaceTracker::AlignMethod _method)
+unsigned long TrackedFace::getUuid() const
 {
-    m_alignmethod = _method;
-    for(size_t i = 0; i < v_facetrackers.size(); i++) {
-        FaceTracker *tracker = v_facetrackers[i];
-        tracker->setFaceAlignMethod(_method);
-    }
+    return uuid;
 }
 
-FaceTracker::AlignMethod MultyFaceTracker::getFaceAlignMethod() const
+void TrackedFace::setUuid(unsigned long value)
 {
-    return m_alignmethod;
+    uuid = value;
 }
 
+bool TrackedFace::getPosted2Srv() const
+{
+    return posted2Srv;
+}
 
+void TrackedFace::setPosted2Srv(bool value)
+{
+    posted2Srv = value;
+}
 
+double TrackedFace::getMetaDistance() const
+{
+    return metaDistance;
+}
 
+cv::String TrackedFace::getMetaInfo() const
+{
+    return metaInfo;
+}
 
+}}

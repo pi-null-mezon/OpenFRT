@@ -1,107 +1,95 @@
 #ifndef MULTYFACETRACKER_H
 #define MULTYFACETRACKER_H
 
-#include "facetracker.h"
-#include <vector>
+#include "facedetector.h"
+
+namespace cv { namespace ofrt {
 
 /**
- * @brief The MultyFaceTracker class was designed for multi face tracking
+ * @brief The TrackedFace class
+ */
+class TrackedFace
+{
+public:
+    TrackedFace(int _historylength=5); // controls how long face tracker should not be dropped
+
+    void clearMetadata();
+    void updatePosition(const cv::Rect &_brect);
+    void decreaseFramesTracked();
+    void setMetaData(int _id, double _distance, const cv::String &_info);
+    cv::Rect getRect(int _averagelast) const;
+
+    int getFramesTracked() const;
+    int getMetaId() const;
+    cv::String getMetaInfo() const;
+    double getMetaDistance() const;
+    unsigned long getUuid() const;
+    void setUuid(unsigned long value);
+    bool getPosted2Srv() const;
+    void setPosted2Srv(bool value);
+
+private:
+
+    std::vector<cv::Rect>   vhistoryrects;  // history of face positions
+    int                     historylength;  // length of history
+    int                     pos;            // current position in vhistoryrects
+    bool                    posted2Srv;     // posted to identification server
+    int                     framesTracked;  // how long face is tracked
+    cv::String              metaInfo;
+    int                     metaId;
+    double                  metaDistance;
+    unsigned long           uuid;           // unique identifier of the tracked face
+};
+
+/**
+ * @brief The MultyFaceTracker class
  */
 class MultyFaceTracker
 {
 public:
+    MultyFaceTracker();
+    MultyFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, size_t _maxfaces);
     /**
-     * @brief Class constructor
-     * @param maxfaces - maximum of simultaneously tracked faces
-     * @param length - value of position history length for the facetrakers
-     * @param method - type of alignment strategy
-     */
-    MultyFaceTracker(uint maxfaces = 5, uchar length = 4, FaceTracker::AlignMethod method = FaceTracker::AlignMethod::Eyes);
-    ~MultyFaceTracker();
-    /**
-     * @brief runs iterative procedure of face search and track
-     * @param Img - input image
-     * @return vector of faces position on Img in cv::RotatedRect format
-     */
-    std::vector<cv::RotatedRect> searchFaces(const cv::Mat &Img);
-    /**
-     * @brief runs iterative procedure of face search and track
+     * @brief Search faces, then crop, resize and return them
      * @param Img - input image
      * @param size - output images size
      * @return vector of resized faces images
      */
-    std::vector<cv::Mat> getResizedFaceImages(const cv::Mat &Img, const cv::Size size);
+    std::vector<cv::Mat> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast);
     /**
-     * @brief loadFaceClassifier
-     * @param pointer - pointer to an object instance
-     * @return has classifier been loaded or not
+     * @brief getTrackedFaces get information about tracked faces
+     * @return vector of tracked faces
      */
-    bool setFaceClassifier(cv::CascadeClassifier *pointer);
+    std::vector<TrackedFace> getTrackedFaces() const;
     /**
-     * @brief loadEyeClassifier
-     * @param pointer - pointer to an object instance
-     * @return has classifier been loaded or not
+     * @brief get pointer to particular TrackedFace object
+     * @param i - id of the
+     * @return pointer to underlying data
      */
-    bool setEyeClassifier(cv::CascadeClassifier *pointer);
+    TrackedFace *at(size_t i);
     /**
-     * @brief setDlibFaceShapePredictor
-     * @param pointer
+     * @brief maxFaces
+     * @return maximum of simultaneously tracked faces
      */
-    void setDlibFaceShapePredictor(dlib::shape_predictor *pointer);
+    size_t maxFaces() const;
     /**
-     * @brief getRotatedRects
-     * @return vector of faces position on Img in cv::RotatedRect format
-     * @note should be called after searchFaces(...) or getResizedFaceImages(...)
+     * @brief setFaceDetector - set face detection backend
+     * @param _ptr - self explained
+     * @param _maxfaces - maximum of simultaneously tracked faces
      */
-    std::vector<cv::RotatedRect> getRotatedRects() const;
-    /**
-     * @brief setMaxFaces
-     * @param maxfaces - maximum of simultaneously tracked faces
-     */
-    void setMaxFaces(uint maxfaces);
-    /**
-     * @brief getMaxFaces
-     * @return size of the facetrackers vector
-     */
-    size_t getMaxFaces() const;
-    /**
-     * @brief calls setFaceRectPortions for the all FaceRecognizers
-     * @param xPortion - self explained
-     * @param yPortion - self explained
-     */
-    void setFaceRectPortions(float xPortion, float yPortion);
-    /**
-     * @brief calls setFaceRectShifts for the all FaceRecognizers
-     * @param _xShift - shift in portion of face rect width
-     * @param _yShift - shift in portion of face rect height
-     */
-    void setFaceRectShifts(float _xShift, float _yShift);
-    /**
-     * @param i - index of the tracker, it should be greater than -1 and less than getMaxFaces()
-     * @return pointer to the particular facetracker
-     */
-    const FaceTracker *at(int i);
-    /**
-     * @param i - index of the tracker, it should be greater than -1 and less than getMaxFaces()
-     * @return pointer to the particular facetracker
-     */
-    FaceTracker *operator[](int i);
-    /**
-     * @brief setFaceAlignMethod - set face align method for the each one of facetrackers
-     * @param _method - self explained
-     */
-    void setFaceAlignMethod(FaceTracker::AlignMethod _method);
-    /**
-     * @brief getFaceAlignMethod - self explained
-     * @return face align method
-     */
-    FaceTracker::AlignMethod getFaceAlignMethod() const;
+    void setFaceDetector(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, size_t _maxfaces);
 
 private:
-    std::vector<FaceTracker *> v_facetrackers;
-    uint m_facesFound;
-    uint m_historylength;
-    FaceTracker::AlignMethod m_alignmethod;
+    cv::Mat         __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
+    void            __enrollImage(const cv::Mat &_img);
+    unsigned long   __nextUUID();
+
+    cv::Ptr<cv::ofrt::FaceDetector> dPtr;    
+    std::vector<TrackedFace> vtrackedfaces;
+
+    unsigned long uuid;
 };
+
+}}
 
 #endif // MULTYFACETRACKER_H
