@@ -42,14 +42,16 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
+    dPtr->setPortions(1.4,1.2);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
+
 
     cv::Mat framemat;
     double _frametimems, _timemark = cv::getTickCount();
     std::string timestr;
     while(videocapture.read(framemat)) {       
         // Frame processing block
-        auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(150,150),2);
+        auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(170,226),2);
         auto _vtrackedfaces = mfacetracker.getTrackedFaces();
         for(size_t i = 0; i < _vtrackedfaces.size(); ++i) {
             if(_vtrackedfaces[i].getFramesTracked() > 0) {
@@ -59,9 +61,9 @@ int main(int argc, char **argv)
                 cv::putText(framemat,label,_rect.tl() - cv::Point(0,10),cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0,0,255),1,cv::LINE_AA);
             }
         }
-        /*for(size_t i = 0; i < _vfaces.size(); ++i) {
-            cv::imshow(std::to_string(i),_vfaces[i]);
-        }*/
+        for(size_t i = 0; i < _vfaces.size(); ++i) {
+            cv::imshow(std::to_string(i),_vfaces[i].second);
+        }
         // Performance measurements
         _frametimems = 1000.0 * (cv::getTickCount() - _timemark) / cv::getTickFrequency();
         _timemark = cv::getTickCount();
