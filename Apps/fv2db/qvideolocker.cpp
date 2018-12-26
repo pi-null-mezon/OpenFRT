@@ -9,6 +9,7 @@ void QVideoLocker::updateFrame(const cv::Mat &_framemat, unsigned long _uuid)
 {
     if(locked == false) {
         __lock();
+        qDebug("Video locker retranslates uuid: %d",_uuid);
         emit frameUpdated(_framemat, _uuid);
     }
 }

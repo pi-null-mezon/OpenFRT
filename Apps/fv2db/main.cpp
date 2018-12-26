@@ -173,9 +173,7 @@ int main(int argc, char *argv[])
         return 8;
     }
     QFaceRecognizer _qfacerecognizer(_identificationurl);
-    // Let's create video locker
-    QVideoLocker _qvideolocker;
-    // And frames dropper
+    // Let's create frames dropper (it is especially needed when opencv's videocapture works with ipstreams)
     QFramesDropper _qframesdropper;
 
     //MongoDB integration (through Eve REST full WEB interface)
@@ -203,10 +201,8 @@ int main(int argc, char *argv[])
     QObject::connect(&_qvideocapture, SIGNAL(frameUpdated(cv::Mat)), &_qframesdropper,SLOT(updateFrame(cv::Mat)));
     QObject::connect(&_qframesdropper,SIGNAL(frameUpdated(cv::Mat)), &_qmultyfacetracker, SLOT(enrollImage(cv::Mat)));
     QObject::connect(&_qmultyfacetracker,SIGNAL(frameProcessed()), &_qframesdropper, SLOT(passFrames()));
-    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,unsigned long)), &_qvideolocker, SLOT(updateFrame(cv::Mat,unsigned long)));
-    QObject::connect(&_qvideolocker, SIGNAL(frameUpdated(cv::Mat,unsigned long)), &_qfacerecognizer, SLOT(predict(cv::Mat,unsigned long)));
+    QObject::connect(&_qmultyfacetracker, SIGNAL(faceWithoutLabelFound(cv::Mat,unsigned long)), &_qfacerecognizer, SLOT(predict(cv::Mat,unsigned long)));
     QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,unsigned long)), &_qmultyfacetracker,SLOT(setLabelForTheFace(int,double,cv::String,unsigned long)));
-    QObject::connect(&_qfacerecognizer, SIGNAL(labelPredicted(int,double,cv::String,unsigned long)), &_qvideolocker, SLOT(unlock()));
 
     qInfo("Starting threads");
     // Let's organize threads

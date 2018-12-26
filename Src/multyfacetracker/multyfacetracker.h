@@ -27,6 +27,7 @@ public:
     void setUuid(unsigned long value);
     bool getPosted2Srv() const;
     void setPosted2Srv(bool value);
+    int getUnknownInRow() const;
 
 private:
 
@@ -37,6 +38,7 @@ private:
     int                     framesTracked;  // how long face is tracked
     cv::String              metaInfo;
     int                     metaId;
+    int                     unknownInRow;   // stores how many times metaId has been set to -1
     double                  metaDistance;
     unsigned long           uuid;           // unique identifier of the tracked face
 };
@@ -53,9 +55,9 @@ public:
      * @brief Search faces, then crop, resize and return them
      * @param Img - input image
      * @param size - output images size
-     * @return vector of resized faces images
+     * @return vector of resized faces images along with positional id of corresponding tracked face object
      */
-    std::vector<cv::Mat> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast);
+    std::vector<std::pair<size_t,cv::Mat>> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast);
     /**
      * @brief getTrackedFaces get information about tracked faces
      * @return vector of tracked faces

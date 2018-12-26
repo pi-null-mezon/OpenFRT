@@ -16,11 +16,14 @@ QMultyFaceTracker::QMultyFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_cvp
 void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 {
     if(!inputImg.empty()) {
-        std::vector<cv::Mat> v_faces = multyfacetracker.getResizedFaceImages(inputImg, targetSize,1);
-        for(std::size_t i = 0; i < v_faces.size(); i++) {
-            cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(i);
-            if((_ptrackedface->getMetaId() == -1) && (_ptrackedface->getPosted2Srv() == false)) {
-                emit faceWithoutLabelFound(v_faces[i], _ptrackedface->getUuid());
+        std::vector<std::pair<size_t,cv::Mat>> vfaces = multyfacetracker.getResizedFaceImages(inputImg,targetSize,1);
+        for(std::size_t i = 0; i < vfaces.size(); i++) {
+            cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(vfaces[i].first);
+            if((_ptrackedface->getMetaId() < 0) &&
+               (_ptrackedface->getUnknownInRow() <= 7) && // this should decrease load of identificatio nserver
+               (_ptrackedface->getPosted2Srv() == false)) {
+                qDebug("signal to post identification for uuid %d", _ptrackedface->getUuid());
+                emit faceWithoutLabelFound(vfaces[i].second, _ptrackedface->getUuid());
                 _ptrackedface->setPosted2Srv(true);
             }
         }
@@ -50,19 +53,20 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 
                     // Draw face tracking info
                     std::string _ftinfo = std::string("FD ") + std::to_string(i) + std::string(" (uuid: ") + std::to_string(_ptrackedface->getUuid()) + std::string(")");
-                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(4+_pointsize,20+_pointsize), _fonttype, 0.5, cv::Scalar(0,0,255), _thickness, CV_AA);
+                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(4+_pointsize,20+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(0,0,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(3+_pointsize,19+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(255,255,255), _thickness, CV_AA);
                     // Draw label info
                     cv::String _infostr = utf8cyr2utf8latin( _ptrackedface->getMetaInfo() );
                     cv::putText(_imgmat, _infostr, _tl - cv::Point(4+_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, cv::Scalar(0,255,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, CV_AA);
                     // Draw distance
                     cv::String _confstr = "Dist.:" + cv::String(QString::number(_ptrackedface->getMetaId() > -1 ? _ptrackedface->getMetaDistance(): -1.0, 'f', 2).toLocal8Bit().constData());
                     cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, cv::Scalar(255,255,255), _thickness, CV_AA);
+                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(255,255,255), _thickness, CV_AA);
                     // Draw class label
                     cv::String _labelstr = "ID:" + cv::String(QString::number(_ptrackedface->getMetaId()).toLocal8Bit().constData());
                     cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+30*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+27*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,255), _thickness, CV_AA);
+                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+27*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, CV_AA);
                 }
             }
             // Control time

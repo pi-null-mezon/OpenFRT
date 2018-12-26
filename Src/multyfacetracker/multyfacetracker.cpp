@@ -16,15 +16,15 @@ MultyFaceTracker::MultyFaceTracker(const cv::Ptr<FaceDetector> &_ptr, size_t _ma
     vtrackedfaces.resize(_maxfaces);
 }
 
-std::vector<Mat> MultyFaceTracker::getResizedFaceImages(const Mat &_img, const Size &_size, int _averagelast)
+std::vector<std::pair<size_t,Mat>> MultyFaceTracker::getResizedFaceImages(const Mat &_img, const Size &_size, int _averagelast)
 {
     __enrollImage(_img);
-    std::vector<Mat> _vfaces;
+    std::vector<std::pair<size_t,Mat>> _vfaces;
     _vfaces.reserve(vtrackedfaces.size());
     cv::Rect _imgboundingrect(0,0,_img.cols,_img.rows);
     for(size_t i = 0; i < vtrackedfaces.size(); ++i) {
         if(vtrackedfaces[i].getFramesTracked() > 0)
-            _vfaces.push_back(__cropInsideFromCenterAndResize(_img(vtrackedfaces[i].getRect(_averagelast) & _imgboundingrect),_size));
+            _vfaces.push_back(std::make_pair(i,__cropInsideFromCenterAndResize(_img(vtrackedfaces[i].getRect(_averagelast) & _imgboundingrect),_size)));
     }
     return _vfaces;
 }
@@ -78,31 +78,38 @@ void MultyFaceTracker::__enrollImage(const Mat &_img)
 {
     std::vector<cv::Rect> vrects = dPtr->detectFaces(_img);
     std::vector<bool>     alreadyused(vrects.size(),false);
-
+    // First we need to update tracked faces
     for(size_t i = 0; i < vtrackedfaces.size(); ++i) {
         TrackedFace &_tf = vtrackedfaces[i];
         bool updated = false;
         for(size_t j = 0; j < vrects.size(); ++j) {
             if(alreadyused[j] == false) {
                 if(_tf.getFramesTracked() > 0) {
-                    cv::Rect _lastrect = _tf.getRect(1);
-                    if((_lastrect & vrects[j]).area() > ((_lastrect.area() + vrects[j].area()) / 6)) {
+                    const cv::Rect _lastrect = _tf.getRect(1);
+                    if((_lastrect & vrects[j]).area() > _lastrect.area() / 2) {
                         _tf.updatePosition(vrects[j]);
                         alreadyused[j] = true;
                         updated = true;
                         break;
                     }
-                } else { // new face
-                    _tf.updatePosition(vrects[j]);
-                    _tf.setUuid(__nextUUID()); // generate new guid
-                    alreadyused[j] = true;
-                    updated = true;
-                    break;
                 }
             }
         }
         if(updated == false) {
             _tf.decreaseFramesTracked();
+        }
+    }
+    // Second we need enroll new faces
+    for(size_t i = 0; i < vrects.size(); ++i) {
+        if(alreadyused[i] == false) {
+            for(size_t j = 0; j < vtrackedfaces.size(); ++j) {
+                TrackedFace &_tf = vtrackedfaces[j];
+                if(_tf.getFramesTracked() == 0) {
+                    _tf.updatePosition(vrects[i]);
+                    _tf.setUuid(__nextUUID()); // generate new guid
+                    break;
+                }
+            }
         }
     }
 }
@@ -124,7 +131,8 @@ TrackedFace::TrackedFace(int _historylength) :
 
 void TrackedFace::clearMetadata()
 {
-    metaId = -1;
+    unknownInRow = 0;
+    metaId = -1; // -1 - unknown person, -2 - error on recognition (for the instance face could not be found)
     metaInfo = "Identification...";
     metaDistance = -1;
     posted2Srv = false;
@@ -153,6 +161,12 @@ void TrackedFace::decreaseFramesTracked()
 
 void TrackedFace::setMetaData(int _id, double _distance, const String &_info)
 {
+    if(_id == -1) {
+        if(metaId == -1)
+            unknownInRow++;
+    } else {
+        unknownInRow = 0;
+    }
     metaId = _id;
     metaDistance = _distance;
     metaInfo = _info;
@@ -203,6 +217,11 @@ bool TrackedFace::getPosted2Srv() const
 void TrackedFace::setPosted2Srv(bool value)
 {
     posted2Srv = value;
+}
+
+int TrackedFace::getUnknownInRow() const
+{
+    return unknownInRow;
 }
 
 double TrackedFace::getMetaDistance() const

@@ -17,7 +17,7 @@ void QSlackClient::enrollRecognition(int _label, double _distance, const cv::Str
         unrecfacesinrow = 0;
         prevLabel = _label;
     } else {
-        if(prevTime.secsTo(_time) > 11) {
+        if(prevTime.secsTo(_time) > 7) {
             unrecfacesinrow = 1;
         } else {
             unrecfacesinrow++;
@@ -26,7 +26,7 @@ void QSlackClient::enrollRecognition(int _label, double _distance, const cv::Str
 
     prevTime  = _time;
 
-    if(unrecfacesinrow == 15) {
+    if(unrecfacesinrow == 7) {
         postImageIntoSlackChannel(getSlackchannelid(),getSlackbottoken(),-1,-1.0,"Незнакомец",_img);
     }
 }

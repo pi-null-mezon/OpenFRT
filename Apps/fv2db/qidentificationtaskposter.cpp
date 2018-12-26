@@ -36,6 +36,7 @@ void QIdentificationTaskPoster::run()
     QObject::connect(_reply, SIGNAL(finished()), this, SLOT(quit()));
     exec();
 
+    qInfo("%u",uuid);
     if(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
         QJsonParseError _jperror;
         QByteArray _replydata = _reply->readAll();
@@ -59,7 +60,7 @@ void QIdentificationTaskPoster::run()
                 }
             } else {
                 qWarning("%s", _replydata.constData());
-                emit labelPredicted(-1,-1.0,"Can not find face",uuid);
+                emit labelPredicted(-2,-1.0,_json.value("message").toString().toUtf8().constData(),uuid);
             }
         } else {
             qWarning("JSON parser error - %s", _jperror.errorString().toUtf8().constData());
