@@ -45,6 +45,12 @@ void MultyFaceTracker::setFaceDetector(const cv::Ptr<FaceDetector> &_ptr, size_t
     vtrackedfaces.resize(_maxfaces);
 }
 
+void MultyFaceTracker::clear()
+{
+    for(size_t i = 0; i < vtrackedfaces.size(); ++i)
+        vtrackedfaces[i] = TrackedFace();
+}
+
 Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Size &size)
 {
     cv::Rect2f roiRect(0,0,0,0);

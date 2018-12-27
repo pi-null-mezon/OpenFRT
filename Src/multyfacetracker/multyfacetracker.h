@@ -11,7 +11,7 @@ namespace cv { namespace ofrt {
 class TrackedFace
 {
 public:
-    TrackedFace(int _historylength=5); // controls how long face tracker should not be dropped
+    TrackedFace(int _historylength=5); // controls how long face tracker should not be dropped when face desappears
 
     void clearMetadata();
     void updatePosition(const cv::Rect &_brect);
@@ -75,6 +75,10 @@ public:
      * @param _maxfaces - maximum of simultaneously tracked faces
      */
     void setFaceDetector(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, size_t _maxfaces);
+    /**
+     * @brief clear all tracked faces data
+     */
+    void clear();
 
 private:
     cv::Mat         __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
