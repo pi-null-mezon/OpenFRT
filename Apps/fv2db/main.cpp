@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     ptrFD->setPortions(_settings.value("Facetracking/FaceHPortion",1.4).toFloat(),
                       _settings.value("Facetracking/FaceVPortion",1.2).toFloat());
 
-    QMultyFaceTracker _qmultyfacetracker(ptrFD,_settings.value("Facetracking/Maxfaces",64).toUInt());
+    QMultyFaceTracker _qmultyfacetracker(ptrFD,_settings.value("Facetracking/Maxfaces",32).toUInt());
     _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
                                                   _settings.value("Facetracking/FaceVSize",226).toInt()));
 

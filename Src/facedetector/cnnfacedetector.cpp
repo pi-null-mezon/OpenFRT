@@ -28,7 +28,7 @@ std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
     std::vector<cv::Mat> outs;
     net.forward(outs,outputs);
     std::vector<Rect> boxes;
-    boxes.reserve(8);
+    boxes.reserve(32);
     // Network produces output blob with a shape 1x1xNx7 where N is a number of
     // detections and an every detection is a vector of values
     // [batchId, classId, confidence, left, top, right, bottom]
