@@ -52,11 +52,11 @@ int main(int argc, char **argv)
     while(videocapture.read(framemat)) {       
         // Frame processing block
         auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(170,226),2);
-        auto _vtrackedfaces = mfacetracker.getTrackedFaces();
-        for(size_t i = 0; i < _vtrackedfaces.size(); ++i) {
-            if(_vtrackedfaces[i].getFramesTracked() > 0) {
-                string label = string("FT# ") + to_string(i) + string(", face guid: ") + std::to_string(_vtrackedfaces[i].getUuid());
-                cv::Rect _rect = _vtrackedfaces[i].getRect(2);
+        for(size_t i = 0; i < _vfaces.size(); ++i) {
+            cv::ofrt::TrackedFace *_tf = mfacetracker.at(_vfaces[i].first);
+            if(_tf->getFramesTracked() > 0) {
+                string label = string("FT# ") + to_string(_vfaces[i].first) + string(", face guid: ") + std::to_string(_tf->getUuid());
+                cv::Rect _rect = _tf->getRect(2);
                 cv::rectangle(framemat,_rect,cv::Scalar(0,255,127),1,cv::LINE_AA);
                 cv::putText(framemat,label,_rect.tl() - cv::Point(0,10),cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0,0,255),1,cv::LINE_AA);
             }

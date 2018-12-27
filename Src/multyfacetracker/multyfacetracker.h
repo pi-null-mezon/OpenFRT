@@ -59,11 +59,6 @@ public:
      */
     std::vector<std::pair<size_t,cv::Mat>> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast);
     /**
-     * @brief getTrackedFaces get information about tracked faces
-     * @return vector of tracked faces
-     */
-    std::vector<TrackedFace> getTrackedFaces() const;
-    /**
      * @brief get pointer to particular TrackedFace object
      * @param i - id of the
      * @return pointer to underlying data

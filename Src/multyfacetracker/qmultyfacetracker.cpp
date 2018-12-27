@@ -22,7 +22,6 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
             if((_ptrackedface->getMetaId() < 0) &&
                (_ptrackedface->getUnknownInRow() <= 7) && // this should decrease load of identificatio nserver
                (_ptrackedface->getPosted2Srv() == false)) {
-                qDebug("signal to post identification for uuid %d", _ptrackedface->getUuid());
                 emit faceWithoutLabelFound(vfaces[i].second, _ptrackedface->getUuid());
                 _ptrackedface->setPosted2Srv(true);
             }

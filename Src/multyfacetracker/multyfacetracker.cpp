@@ -29,11 +29,6 @@ std::vector<std::pair<size_t,Mat>> MultyFaceTracker::getResizedFaceImages(const 
     return _vfaces;
 }
 
-std::vector<TrackedFace> MultyFaceTracker::getTrackedFaces() const
-{
-    return vtrackedfaces;
-}
-
 TrackedFace *MultyFaceTracker::at(size_t i)
 {
     return &vtrackedfaces[i];
