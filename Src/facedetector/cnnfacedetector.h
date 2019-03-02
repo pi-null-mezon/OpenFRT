@@ -1,4 +1,4 @@
-#ifndef CNNFACEDETECTOR_H
+﻿#ifndef CNNFACEDETECTOR_H
 #define CNNFACEDETECTOR_H
 
 #include <opencv2/dnn.hpp>
@@ -23,6 +23,7 @@ public:
                                             float _confidenceThreshold=0.5f);
 
 private:
+    cv::Mat resizeAndPasteInCenterOfCanvas(const cv::Mat &_img, const cv::Size &_canvassize, cv::Point2f &_originshift, float &_scaleX, float &_scaleY) const;
     float confidenceThreshold;
     mutable cv::dnn::Net net;
     std::vector<cv::String> outputs;
