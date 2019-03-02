@@ -23,13 +23,11 @@ CNNFaceDetector::~CNNFaceDetector()
 
 std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 {
-    cv::Size _targetsize(140,79);
+    cv::Size _targetsize(180,180);
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
     cv::Mat blob;
-    //cv::Size _targetsize(140, 140 * _fixedcanvasimg.rows/_fixedcanvasimg.cols); // greater values could provide detection of smaller faces but processing time will increase proportionally
-    //cv::dnn::blobFromImage(_fixedcanvasimg,blob,1,_targetsize,cv::Scalar(104,177,123),false,false);
     cv::dnn::blobFromImage(_fixedcanvasimg,blob,1,cv::Size(),cv::Scalar(104,177,123),false,false);
     net.setInput(blob);
     std::vector<cv::Mat> outs;
