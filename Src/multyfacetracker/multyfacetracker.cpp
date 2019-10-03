@@ -67,9 +67,9 @@ Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Si
     cv::Mat output;
     if(roiRect.area() > 0)  {
         cv::Mat croppedImg(input, roiRect);
-        int interpolationMethod = CV_INTER_AREA;
+        int interpolationMethod = cv::INTER_AREA;
         if(size.area() > roiRect.area())
-            interpolationMethod = CV_INTER_CUBIC;
+            interpolationMethod = cv::INTER_CUBIC;
         cv::resize(croppedImg, output, size, 0, 0, interpolationMethod);
     }
     return output;

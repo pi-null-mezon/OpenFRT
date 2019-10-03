@@ -37,7 +37,7 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 
             cv::Mat _imgmat = inputImg;
             float _pointsize = _imgmat.cols * 0.000390625f + 0.25;
-            int _fonttype = CV_FONT_HERSHEY_SIMPLEX;
+            int _fonttype = cv::FONT_HERSHEY_SIMPLEX;
             int _thickness = std::floor( _imgmat.cols/1280.0f );
             if(_thickness < 1)
                 _thickness = 1;
@@ -45,37 +45,37 @@ void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
                 const cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(i);
                 if( _ptrackedface->getFramesTracked() > 0 ) {
                     const cv::Rect _rect = _ptrackedface->getRect(1);
-                    cv::rectangle(_imgmat,_rect,cv::Scalar(0,255,0), _thickness, CV_AA);
+                    cv::rectangle(_imgmat,_rect,cv::Scalar(0,255,0), _thickness, cv::LINE_AA);
 
                     const cv::Point _tl(_rect.x,_rect.y);
                     const cv::Point _bl(_rect.x,_rect.y+_rect.height);
 
                     // Draw face tracking info
                     std::string _ftinfo = std::string("FD ") + std::to_string(i) + std::string(" (uuid: ") + std::to_string(_ptrackedface->getUuid()) + std::string(")");
-                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(4+_pointsize,20+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(3+_pointsize,19+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(255,255,255), _thickness, CV_AA);
+                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(4+_pointsize,20+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(0,0,0), _thickness, cv::LINE_AA);
+                    cv::putText(_imgmat, _ftinfo, _tl + cv::Point(3+_pointsize,19+_pointsize), _fonttype, _pointsize*0.75, cv::Scalar(255,255,255), _thickness, cv::LINE_AA);
                     // Draw label info
                     cv::String _infostr = utf8cyr2utf8latin( _ptrackedface->getMetaInfo() );
-                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, cv::LINE_AA);
+                    cv::putText(_imgmat, _infostr, _tl - cv::Point(4+3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, cv::LINE_AA);
                     // Draw distance
                     cv::String _confstr = "Dist.:" + cv::String(QString::number(_ptrackedface->getMetaId() > -1 ? _ptrackedface->getMetaDistance(): -1.0, 'f', 2).toLocal8Bit().constData());
-                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(255,255,255), _thickness, CV_AA);
+                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-_pointsize,4+_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, cv::LINE_AA);
+                    cv::putText(_imgmat, _confstr, _bl - cv::Point(-4-3*_pointsize,4+3*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(255,255,255), _thickness, cv::LINE_AA);
                     // Draw class label
                     cv::String _labelstr = "ID:" + cv::String(QString::number(_ptrackedface->getMetaId()).toLocal8Bit().constData());
-                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+30*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+27*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, CV_AA);
+                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+30*_pointsize), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, cv::LINE_AA);
+                    cv::putText(_imgmat, _labelstr, _bl + cv::Point(4+5*_pointsize,4+27*_pointsize), _fonttype, _pointsize, _ptrackedface->getPosted2Srv() ? cv::Scalar(100,100,100) : cv::Scalar(0,255,0), _thickness, cv::LINE_AA);
                 }
             }
             // Control time
             double _time =  static_cast<double>(_temp - _ticks) * 1000.0 / cv::getTickFrequency();
             _ticks = _temp;
             cv::String _timestr = QString("%1x%2 %3 ms").arg(QString::number(_imgmat.cols),QString::number(_imgmat.rows),QString::number(_time,'f',1)).toStdString();
-            cv::putText(_imgmat, _timestr, cv::Point(6,_imgmat.rows - 4), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, CV_AA);
-            cv::putText(_imgmat, _timestr, cv::Point(5,_imgmat.rows - 5), _fonttype, _pointsize, cv::Scalar(255,255,255), _thickness, CV_AA);
+            cv::putText(_imgmat, _timestr, cv::Point(6,_imgmat.rows - 4), _fonttype, _pointsize, cv::Scalar(0,0,0), _thickness, cv::LINE_AA);
+            cv::putText(_imgmat, _timestr, cv::Point(5,_imgmat.rows - 5), _fonttype, _pointsize, cv::Scalar(255,255,255), _thickness, cv::LINE_AA);
 
-            cv::namedWindow("Video probe", CV_WINDOW_NORMAL);
+            cv::namedWindow("Video probe", cv::WINDOW_NORMAL);
             cv::imshow("Video probe",_imgmat);
         }
     }

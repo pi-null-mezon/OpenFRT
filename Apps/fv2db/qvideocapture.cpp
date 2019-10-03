@@ -61,11 +61,11 @@ void QVideoCapture::resume()
 void QVideoCapture::setCaptureProps(int _width, int _height, int _fps)
 {
     if(m_videocapture.isOpened()) {
-        if(m_videocapture.set(CV_CAP_PROP_FRAME_WIDTH, static_cast<double>(_width)) == false)
+        if(m_videocapture.set(cv::CAP_PROP_FRAME_WIDTH, static_cast<double>(_width)) == false)
             qWarning("QVideoCapture: can not set width to %d", _width);
-        if(m_videocapture.set(CV_CAP_PROP_FRAME_HEIGHT, static_cast<double>(_height)) == false)
+        if(m_videocapture.set(cv::CAP_PROP_FRAME_HEIGHT, static_cast<double>(_height)) == false)
             qWarning("QVideoCapture: can not set height to %d", _height);
-        if(m_videocapture.set(CV_CAP_PROP_FPS, static_cast<double>(_fps)) == false)
+        if(m_videocapture.set(cv::CAP_PROP_FPS, static_cast<double>(_fps)) == false)
             qWarning("QVideoCapture: can not set fps to %d", _fps);
         if(pt_timer != nullptr)
             pt_timer->setInterval( 1000.0 / _fps );

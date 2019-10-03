@@ -70,9 +70,9 @@ Mat CNNFaceDetector::resizeAndPasteInCenterOfCanvas(const Mat &_img, const Size 
     _scaleX = (float)_targetsize.width  / _img.cols;
     _scaleY = (float)_targetsize.height / _img.rows;
 
-    int _interptype = CV_INTER_AREA;
+    int _interptype = cv::INTER_AREA;
     if(_targetsize.area() > (_img.rows*_img.cols)) {
-        _interptype = CV_INTER_LINEAR;
+        _interptype = cv::INTER_LINEAR;
     }
     cv::Mat _resizedimg;
     cv::resize(_img,_resizedimg,_targetsize,0,0,_interptype);

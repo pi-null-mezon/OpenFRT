@@ -32,7 +32,7 @@ void QSlackImagePoster::run()
     photo.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/jpeg"));
     photo.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(QString("form-data; name=\"file\"; filename=\"%1.jpg\"").arg(labelinfo))); // filename is needed here
     if(!img.empty()) {
-        cv::resize(img,img,cv::Size(78,92),0,0,CV_INTER_AREA);
+        cv::resize(img,img,cv::Size(78,92),0,0,cv::INTER_AREA);
         std::vector<uchar> _vbytes;
         cv::imencode(".jpg",img,_vbytes);
         photo.setBody(QByteArray((const char*)_vbytes.data(), (int)_vbytes.size()));

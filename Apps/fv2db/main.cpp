@@ -39,8 +39,9 @@ int main(int argc, char *argv[])
         qInfo(" -v      - enable visualization");
         return 0;
     }
-
-    QCoreApplication a(argc, argv);
+    int _argc = argc;
+    char **_argv = argv;
+    QCoreApplication a(_argc, _argv);
 
     QString _logfilename, _videostreamurl, _identificationurl, _eveserverposturl, _mongodbaccesstoken, _viewspotid, _settingsfilename;
     int _videodeviceid = -1;
