@@ -1,6 +1,7 @@
 from eve import Eve
 from eve.auth import TokenAuth
 from flask import current_app as app
+from waitress import serve
 
 class TokenAuth(TokenAuth):
     def check_auth(self, token, allowed_roles, resource, method):
@@ -16,4 +17,4 @@ class TokenAuth(TokenAuth):
 
 if __name__ == '__main__':
     app = Eve(auth=TokenAuth)
-    app.run()
+    serve(app,host="0.0.0.0",port=2308)
