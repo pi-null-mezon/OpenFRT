@@ -80,8 +80,10 @@ public:
      */
     void clear();
 
+
+    static cv::Mat  __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
+
 private:
-    cv::Mat         __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
     void            __enrollImage(const cv::Mat &_img);
     unsigned long   __nextUUID();
 
