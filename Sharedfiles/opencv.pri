@@ -40,7 +40,8 @@ win32 {
             -l$$qtLibraryName(opencv_objdetect$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_videoio$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_imgcodecs$${OPENCV_VERSION}) \
-            -l$$qtLibraryName(opencv_dnn$${OPENCV_VERSION})
+            -l$$qtLibraryName(opencv_dnn$${OPENCV_VERSION}) \
+            -l$$qtLibraryName(opencv_face$${OPENCV_VERSION})
     message(OpenCV library version $${OPENCV_DIR}/$${OPENCV_ARCHITECTURE_DIR}/$${OPENCV_COMPILER_DIR} will be used)
 }
 
@@ -51,7 +52,8 @@ linux {
             -lopencv_imgproc \
             -lopencv_videoio \
             -lopencv_imgcodecs \
-            -lopencv_dnn
+            -lopencv_dnn \
+            -lopencv_face
 }
 
 DEFINES += OPENCV_DIR=\\\"$${OPENCV_DIR}\\\"
