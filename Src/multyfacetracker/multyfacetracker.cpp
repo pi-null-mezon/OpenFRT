@@ -54,16 +54,16 @@ void MultyFaceTracker::clear()
 Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Size &size)
 {
     cv::Rect2f roiRect(0,0,0,0);
-    if((float)input.cols/input.rows > (float)size.width/size.height) {
-        roiRect.height = (float)input.rows;
-        roiRect.width = input.rows * (float)size.width/size.height;
+    if(static_cast<float>(input.cols)/input.rows > static_cast<float>(size.width)/size.height) {
+        roiRect.height = static_cast<float>(input.rows);
+        roiRect.width = input.rows * static_cast<float>(size.width)/size.height;
         roiRect.x = (input.cols - roiRect.width)/2.0f;
     } else {
-        roiRect.width = (float)input.cols;
-        roiRect.height = input.cols * (float)size.height/size.width;
+        roiRect.width = static_cast<float>(input.cols);
+        roiRect.height = input.cols * static_cast<float>(size.height)/size.width;
         roiRect.y = (input.rows - roiRect.height)/2.0f;
     }
-    roiRect &= cv::Rect2f(0, 0, (float)input.cols, (float)input.rows);
+    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(input.cols), static_cast<float>(input.rows));
     cv::Mat output;
     if(roiRect.area() > 0)  {
         cv::Mat croppedImg(input, roiRect);
@@ -126,7 +126,7 @@ TrackedFace::TrackedFace(int _historylength) :
     framesTracked(0)
 {
     historylength = _historylength;
-    vhistoryrects.resize(historylength,cv::Rect(0,0,0,0));
+    vhistoryrects.resize(static_cast<size_t>(historylength),cv::Rect(0,0,0,0));
     clearMetadata();
 }
 
@@ -146,7 +146,7 @@ void TrackedFace::updatePosition(const Rect &_brect)
         for(size_t i = 0; i < vhistoryrects.size(); ++i)
             vhistoryrects[i] = _brect;
     } else {
-        vhistoryrects[pos] = _brect;
+        vhistoryrects[static_cast<size_t>(pos)] = _brect;
     }
     framesTracked = framesTracked <= historylength ? framesTracked + 1 : historylength;
     pos = (pos + 1) % historylength;
@@ -177,7 +177,7 @@ Rect TrackedFace::getRect(int _averagelast) const
 {
     float _x = 0.0f, _y = 0.0f, _w = 0.0f, _h = 0.0f;
     for(int i = 0; i < _averagelast; ++i) {
-        const cv::Rect &_rect = vhistoryrects[ (((pos - 1 - i) % historylength) + historylength) % historylength];
+        const cv::Rect &_rect = vhistoryrects[ static_cast<size_t>((((pos - 1 - i) % historylength) + historylength) % historylength) ];
         _x += _rect.x;
         _y += _rect.y;
         _w += _rect.width;
@@ -187,7 +187,10 @@ Rect TrackedFace::getRect(int _averagelast) const
     _y /= _averagelast;
     _w /= _averagelast;
     _h /= _averagelast;
-    return cv::Rect(_x,_y,_w,_h);
+    return cv::Rect(static_cast<int>(_x),
+                    static_cast<int>(_y),
+                    static_cast<int>(_w),
+                    static_cast<int>(_h));
 }
 
 int TrackedFace::getFramesTracked() const

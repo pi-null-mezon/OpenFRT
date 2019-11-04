@@ -9,6 +9,7 @@
 #include "facedetector.h"
 #include "cnnfacedetector.h"
 #include "multyfacetracker.h"
+#include "facemarkdlib.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkLBF();
+    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkDlib();//cv::face::createFacemarkLBF();
     bool performlandmarksdetection = false;
     if(cmdparser.has("landmarks")) {
         flandmarks->loadModel(cmdparser.get<std::string>("landmarks"));
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(1.2,1);
+    dPtr->setPortions(1.1f,0.8f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
 

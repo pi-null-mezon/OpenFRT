@@ -11,17 +11,21 @@ SOURCES += \
 DEFINES += APP_NAME=\\\"$${TARGET}\\\"
 
 include($${PWD}/../../../Sharedfiles/opencv.pri)
+include($${PWD}/../../../Sharedfiles/dlib.pri)
 
 DEFINES += TRY_TO_USE_CUDA
 
 SOURCES += $${PWD}/../../facedetector/facedetector.cpp \
             $${PWD}/../../facedetector/cnnfacedetector.cpp \
-            $${PWD}/../../multyfacetracker/multyfacetracker.cpp
+            $${PWD}/../../multyfacetracker/multyfacetracker.cpp \
+            $${PWD}/../../facelandmarks/facemarkdlib.cpp
 
 HEADERS += \
     $${PWD}/../../facedetector/facedetector.h \
     $${PWD}/../../facedetector/cnnfacedetector.h \
-    $${PWD}/../../multyfacetracker/multyfacetracker.h
+    $${PWD}/../../multyfacetracker/multyfacetracker.h \
+    $${PWD}/../../facelandmarks/facemarkdlib.h
 
 INCLUDEPATH += $${PWD}/../../facedetector \
-                $${PWD}/../../multyfacetracker
+               $${PWD}/../../multyfacetracker \
+               $${PWD}/../../facelandmarks

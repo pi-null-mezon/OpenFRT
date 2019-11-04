@@ -10,14 +10,14 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
 {
     net = cv::dnn::readNet(_modelfilename,_txtfilename);
 #ifdef TRY_TO_USE_CUDA // Tested successfully on Nvidia Jetson Nano with opencv412
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+    //net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    //net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 #endif
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::vector<String> layersNames = net.getLayerNames();
     outputs.resize(outLayers.size());
     for(size_t i = 0; i < outLayers.size(); ++i) {
-        outputs[i] = layersNames[outLayers[i] - 1];
+        outputs[i] = layersNames[static_cast<size_t>(outLayers[i]) - 1];
     }
 }
 
@@ -45,20 +45,20 @@ std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
     // Network produces output blob with a shape 1x1xNx7 where N is a number of
     // detections and an every detection is a vector of values
     // [batchId, classId, confidence, left, top, right, bottom]
-    float* data = (float*)outs[0].data;
+    float* data = reinterpret_cast<float*>(outs[0].data);
     for (size_t i = 0; i < outs[0].total(); i += 7) {
         float confidence = data[i + 2];
         if (confidence > confidenceThreshold) {
-            int left   = (int)((data[i + 3] * _fixedcanvasimg.cols - _oshift.x) / _sX);
-            int top    = (int)((data[i + 4] * _fixedcanvasimg.rows - _oshift.y) / _sY);
-            int right  = (int)((data[i + 5] * _fixedcanvasimg.cols - _oshift.x) / _sX);
-            int bottom = (int)((data[i + 6] * _fixedcanvasimg.rows - _oshift.y) / _sY);
+            int left   = static_cast<int>((data[i + 3] * _fixedcanvasimg.cols - _oshift.x) / _sX);
+            int top    = static_cast<int>((data[i + 4] * _fixedcanvasimg.rows - _oshift.y) / _sY);
+            int right  = static_cast<int>((data[i + 5] * _fixedcanvasimg.cols - _oshift.x) / _sX);
+            int bottom = static_cast<int>((data[i + 6] * _fixedcanvasimg.rows - _oshift.y) / _sY);
             int width  = right - left + 1;
             int height = bottom - top + 1;
-            boxes.push_back( Rect(left + width*getXShift()  - width*(getXPortion()  - 1.0f)/2.0f,
-                                  top  + height*getYShift() - height*(getYPortion() - 1.0f)/2.0f,
-                                  width*getXPortion(),
-                                  height*getYPortion()) );
+            boxes.push_back( Rect(static_cast<int>(left + width*getXShift()  - width*(getXPortion()  - 1.0f)/2.0f),
+                                  static_cast<int>(top  + height*getYShift() - height*(getYPortion() - 1.0f)/2.0f),
+                                  static_cast<int>(width*getXPortion()),
+                                  static_cast<int>(height*getYPortion())) );
         }
     }
     return boxes;
@@ -68,15 +68,15 @@ Mat CNNFaceDetector::resizeAndPasteInCenterOfCanvas(const Mat &_img, const Size 
 {
     cv::Mat  _canvasmat = cv::Mat::zeros(_canvassize,_img.type());
     cv::Size _targetsize;
-    if((float)_canvassize.width/_canvassize.height > (float)_img.cols/_img.rows) {
+    if(static_cast<float>(_canvassize.width)/_canvassize.height > static_cast<float>(_img.cols)/_img.rows) {
         _targetsize.height = _canvassize.height;
-        _targetsize.width  = _canvassize.height * (float)_img.cols/_img.rows;
+        _targetsize.width  = static_cast<int>(_canvassize.height * static_cast<float>(_img.cols)/_img.rows);
     } else {
         _targetsize.width  = _canvassize.width;
-        _targetsize.height = _canvassize.width * (float)_img.rows/_img.cols;
+        _targetsize.height = static_cast<int>(_canvassize.width * static_cast<float>(_img.rows)/_img.cols);
     }
-    _scaleX = (float)_targetsize.width  / _img.cols;
-    _scaleY = (float)_targetsize.height / _img.rows;
+    _scaleX = static_cast<float>(_targetsize.width)  / _img.cols;
+    _scaleY = static_cast<float>(_targetsize.height) / _img.rows;
 
     int _interptype = cv::INTER_AREA;
     if(_targetsize.area() > (_img.rows*_img.cols)) {
