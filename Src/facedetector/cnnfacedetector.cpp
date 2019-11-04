@@ -9,6 +9,10 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
     confidenceThreshold(_confidenceThreshold)
 {
     net = cv::dnn::readNet(_modelfilename,_txtfilename);
+#ifdef TRY_TO_USE_CUDA // Tested successfully on Nvidia Jetson Nano with opencv412
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+#endif
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::vector<String> layersNames = net.getLayerNames();
     outputs.resize(outLayers.size());
@@ -23,7 +27,11 @@ CNNFaceDetector::~CNNFaceDetector()
 
 std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 {
+#ifdef TRY_TO_USE_CUDA
+    cv::Size _targetsize(300,300);
+#else
     cv::Size _targetsize(180,180);
+#endif
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);

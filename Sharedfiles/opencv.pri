@@ -46,6 +46,8 @@ win32 {
 }
 
 linux {
+    INCLUDEPATH += /usr/local/include/opencv4
+
     LIBS += -lopencv_core \
             -lopencv_objdetect \
             -lopencv_highgui \

@@ -46,12 +46,12 @@ int main(int argc, char **argv)
         cout << "Can not open videodevice with id " << cmdparser.get<int>("videodev") <<endl;
         return 3;
     } else {
-        /*videocapture.set(cv::CAP_PROP_FRAME_WIDTH,1280);
-        videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,720);*/
+        videocapture.set(cv::CAP_PROP_FRAME_WIDTH,640);
+        videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,480);
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(1,0.7);
+    dPtr->setPortions(1.2,1);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
 
