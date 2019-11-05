@@ -13,7 +13,6 @@ DEFINES += APP_NAME=\\\"$${TARGET}\\\"
 include($${PWD}/../../../Sharedfiles/opencv.pri)
 include($${PWD}/../../../Sharedfiles/dlib.pri)
 
-DEFINES += TRY_TO_USE_CUDA
 
 SOURCES += $${PWD}/../../facedetector/facedetector.cpp \
             $${PWD}/../../facedetector/cnnfacedetector.cpp \
@@ -29,3 +28,7 @@ HEADERS += \
 INCLUDEPATH += $${PWD}/../../facedetector \
                $${PWD}/../../multyfacetracker \
                $${PWD}/../../facelandmarks
+
+linux {
+    DEFINES += TRY_TO_USE_CUDA
+}

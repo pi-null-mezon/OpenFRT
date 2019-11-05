@@ -18,6 +18,17 @@ const cv::String keys = "{videodev v  | 0 | number of videodevice to open}"
                         "{model m     |   | facedetection model weights file name}"
                         "{landmarks l |   | facial landmarks model (optional)}";
 
+cv::Rect squareRect(const cv::Rect &_source) {
+    if(_source.width == _source.height)
+        return _source;
+
+    int diff = _source.width - _source.height;
+    return cv::Rect(static_cast<int>(_source.x + diff/2.0f),
+                    _source.y,
+                    _source.width - diff,
+                    _source.height);
+}
+
 int main(int argc, char **argv)
 {
     cv::CommandLineParser cmdparser(argc,argv,keys);
@@ -52,7 +63,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(1.1f,0.8f);
+    dPtr->setPortions(0.8f,0.8f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
 
@@ -69,7 +80,7 @@ int main(int argc, char **argv)
             cv::ofrt::TrackedFace *_tf = mfacetracker.at(_vfaces[i].first);
             if(_tf->getFramesTracked() > 0) {
                 string label = string("FT# ") + to_string(_vfaces[i].first) + string(", face guid: ") + std::to_string(_tf->getUuid());
-                cv::Rect _rect = _tf->getRect(2);
+                cv::Rect _rect = squareRect(_tf->getRect(2));
                 if(performlandmarksdetection)
                     _vrects.push_back(_rect);
                 cv::rectangle(mattoshow,_rect,cv::Scalar(0,255,127),1,cv::LINE_AA);

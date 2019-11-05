@@ -30,7 +30,7 @@ std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 #ifdef TRY_TO_USE_CUDA
     cv::Size _targetsize(300,300);
 #else
-    cv::Size _targetsize(180,180);
+    cv::Size _targetsize(140,140);
 #endif
     float _sX,_sY;
     cv::Point2f _oshift;
