@@ -154,12 +154,12 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceDetector> ptrFD = cv::ofrt::CNNFaceDetector::createDetector(a.applicationDirPath().append("/deploy.prototxt").toStdString(),
                                                                                       a.applicationDirPath().append("/res10_300x300_ssd_iter_140000_fp16.caffemodel").toStdString());
 
-    ptrFD->setPortions(_settings.value("Facetracking/FaceHPortion",1.4).toFloat(),
-                      _settings.value("Facetracking/FaceVPortion",1.2).toFloat());
+    ptrFD->setPortions(_settings.value("Facetracking/FaceHPortion",1.9).toFloat(),
+                      _settings.value("Facetracking/FaceVPortion",2.5).toFloat());
 
     QMultyFaceTracker _qmultyfacetracker(ptrFD,_settings.value("Facetracking/Maxfaces",32).toUInt());
-    _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",170).toInt(),
-                                                  _settings.value("Facetracking/FaceVSize",226).toInt()));
+    _qmultyfacetracker.setTargetFaceSize(cv::Size(_settings.value("Facetracking/FaceHSize",300).toInt(),
+                                                  _settings.value("Facetracking/FaceVSize",400).toInt()));
 
    if(_visualization == false)
        _visualization = _settings.value("Miscellaneous/Visualization",false).toBool();

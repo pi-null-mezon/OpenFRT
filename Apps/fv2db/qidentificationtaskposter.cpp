@@ -36,8 +36,9 @@ void QIdentificationTaskPoster::run()
     QObject::connect(_reply, SIGNAL(finished()), this, SLOT(quit()));
     exec();
 
-    qInfo("%u",uuid);
-    if(_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
+    qInfo("%lu",uuid);
+    int httpcode = _reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if(httpcode == 200 || httpcode == 400) {
         QJsonParseError _jperror;
         QByteArray _replydata = _reply->readAll();
         QJsonObject _json = QJsonDocument::fromJson(_replydata,&_jperror).object();
@@ -66,7 +67,9 @@ void QIdentificationTaskPoster::run()
             qWarning("JSON parser error - %s", _jperror.errorString().toUtf8().constData());
         }
     } else {
-        qInfo("[QIdentificationTaskPoster] Error: %s", _reply->errorString().toUtf8().constData());
+        qInfo("HTTP [%d] - Error: %s", httpcode, _reply->errorString().toUtf8().constData());
+        if(httpcode != 0)
+            qInfo("  Reply: %s", _reply->readAll().constData());
     }
 
     _fields->setParent(_reply);
