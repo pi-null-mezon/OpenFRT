@@ -10,8 +10,8 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
 {
     net = cv::dnn::readNet(_modelfilename,_txtfilename);
 #ifdef TRY_TO_USE_CUDA // Tested successfully on Nvidia Jetson Nano with opencv412
-    //net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-    //net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 #endif
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::vector<String> layersNames = net.getLayerNames();
