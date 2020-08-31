@@ -16,13 +16,14 @@ const cv::String _options = "{help h            |       | this help             
                             "{outputdir o       |       | output directory with images                                  }"
                             "{facedetmodel m    | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model   }"
                             "{facedetdscr d     | deploy_lowres.prototxt | face detector description                    }"
-                            "{confthresh        | 0.75  | confidence threshold for the face detector                    }"
+                            "{confthresh        | 0.50  | confidence threshold for the face detector                    }"
                             "{targetwidth       | 300   | target image width                                            }"
                             "{targetheight      | 400   | target image height                                           }"
                             "{hportion          | 1.9   | target horizontal face portion                                }"
                             "{vportion          | 2.5   | target vertical face portion                                  }"
                             "{videostrobe       | 30    | only each videostrobe frame will be processed                 }"
-                            "{visualize v       | false | enable/disable visualization option                           }";
+                            "{visualize v       | false | enable/disable visualization option                           }"
+                            "{preservefilenames | false | enable/disable filenames preservation                         }";
 
 int main(int argc, char *argv[])
 {
@@ -58,9 +59,11 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
 
+
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
-    const float _hp = _cmdparser.get<float>("hportion"), _vp = _cmdparser.get<float>("vportion");
+    facedetector->setPortions(_cmdparser.get<float>("hportion"),_cmdparser.get<float>("vportion"));
     const bool _visualize = _cmdparser.get<bool>("visualize");
+    const bool _preservefilenames = _cmdparser.get<bool>("preservefilenames");
 
     if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
@@ -77,9 +80,8 @@ int main(int argc, char *argv[])
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<uint>(_facesboxes.size()));
                         const cv::Rect _framerect = cv::Rect(0,0,frame.cols,frame.rows);
                         for(size_t j = 0; j < _facesboxes.size(); ++j) {
-                            const cv::Rect _rect = cv::Rect(_facesboxes[j].x - _facesboxes[j].width*(_hp - 1.0f)/2.0f,
-                                                            _facesboxes[j].y - _facesboxes[j].height*(_vp - 1.0f)/2.0f,
-                                                            _facesboxes[j].width*_hp, _facesboxes[j].height*_vp) & _framerect;
+                            const cv::Rect _rect = cv::Rect(_facesboxes[j].x,_facesboxes[j].y,
+                                                            _facesboxes[j].width, _facesboxes[j].height) & _framerect;
                             cv::Mat _facemat = cv::ofrt::MultyFaceTracker::__cropInsideFromCenterAndResize(frame(_rect),_targetsize);
                             if(_visualize) {
                                 cv::imshow("Probe",_facemat);
@@ -114,15 +116,17 @@ int main(int argc, char *argv[])
                 qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<uint>(_facesboxes.size()));
                 const cv::Rect _framerect = cv::Rect(0,0,_imgmat.cols,_imgmat.rows);
                 for(size_t j = 0; j < _facesboxes.size(); ++j) {
-                    const cv::Rect _rect = cv::Rect(_facesboxes[j].x - _facesboxes[j].width*(_hp - 1.0f)/2.0f,
-                                                    _facesboxes[j].y - _facesboxes[j].height*(_vp - 1.0f)/2.0f,
-                                                    _facesboxes[j].width*_hp, _facesboxes[j].height*_vp) & _framerect;
+                    const cv::Rect _rect = cv::Rect(_facesboxes[j].x,_facesboxes[j].y,
+                                                    _facesboxes[j].width, _facesboxes[j].height) & _framerect;
                     cv::Mat _facemat = cv::ofrt::MultyFaceTracker::__cropInsideFromCenterAndResize(_imgmat(_rect),_targetsize);
                     if(_visualize) {
                         cv::imshow("Probe",_facemat);
                         cv::waitKey(1);
                     }
-                    cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facemat);
+                    if(!_preservefilenames)
+                        cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facemat);
+                    else
+                        cv::imwrite(QString("%1/%2").arg(_outdir.absolutePath(),_fileslist.at(i)).toUtf8().constData(),_facemat);
                 }
             }
         }
