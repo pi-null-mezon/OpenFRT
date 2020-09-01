@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(0.8f,0.8f);
+    dPtr->setPortions(0.7f,0.7f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
 
@@ -73,14 +73,14 @@ int main(int argc, char **argv)
     while(videocapture.read(framemat)) {
         mattoshow = framemat.clone();
         // Frame processing block
-        auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(226,226),2);
+        auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(226,226),1);
         std::vector<cv::Rect> _vrects;
         _vrects.reserve(mfacetracker.maxFaces());
         for(size_t i = 0; i < _vfaces.size(); ++i) {
             cv::ofrt::TrackedFace *_tf = mfacetracker.at(_vfaces[i].first);
             if(_tf->getFramesTracked() > 0) {
                 string label = string("FT# ") + to_string(_vfaces[i].first) + string(", face guid: ") + std::to_string(_tf->getUuid());
-                cv::Rect _rect = squareRect(_tf->getRect(2));
+                cv::Rect _rect = squareRect(_tf->getRect(1));
                 if(performlandmarksdetection)
                     _vrects.push_back(_rect);
                 cv::rectangle(mattoshow,_rect,cv::Scalar(0,255,127),1,cv::LINE_AA);

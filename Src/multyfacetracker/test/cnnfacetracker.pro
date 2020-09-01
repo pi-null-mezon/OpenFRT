@@ -30,5 +30,5 @@ INCLUDEPATH += $${PWD}/../../facedetector \
                $${PWD}/../../facelandmarks
 
 linux {
-    DEFINES += TRY_TO_USE_CUDA
+    #DEFINES += TRY_TO_USE_CUDA
 }

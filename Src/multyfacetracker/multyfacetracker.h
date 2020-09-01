@@ -11,7 +11,7 @@ namespace cv { namespace ofrt {
 class TrackedFace
 {
 public:
-    TrackedFace(int _historylength=5); // controls how long face tracker should not be dropped when face disappears
+    TrackedFace(int _historylength=8); // controls how long face tracker should not be dropped when face disappears
 
     void clearMetadata();
     void updatePosition(const cv::Rect &_brect);
