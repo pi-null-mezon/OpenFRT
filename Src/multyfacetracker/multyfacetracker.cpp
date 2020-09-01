@@ -18,7 +18,6 @@ MultyFaceTracker::MultyFaceTracker(const cv::Ptr<FaceDetector> &_ptr, size_t _ma
 
 std::vector<std::pair<size_t,Mat>> MultyFaceTracker::getResizedFaceImages(const Mat &_img, const Size &_size, int _averagelast)
 {
-    __enrollImage(_img);
     std::vector<std::pair<size_t,Mat>> _vfaces;
     _vfaces.reserve(vtrackedfaces.size());
     cv::Rect _imgboundingrect(0,0,_img.cols,_img.rows);
@@ -75,7 +74,7 @@ Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Si
     return output;
 }
 
-void MultyFaceTracker::__enrollImage(const Mat &_img)
+void MultyFaceTracker::enrollImage(const Mat &_img)
 {
     std::vector<cv::Rect> vrects = dPtr->detectFaces(_img);
     std::vector<bool>     alreadyused(vrects.size(),false);

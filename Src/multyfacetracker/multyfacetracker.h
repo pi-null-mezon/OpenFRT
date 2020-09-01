@@ -17,7 +17,7 @@ public:
     void updatePosition(const cv::Rect &_brect);
     void decreaseFramesTracked();
     void setMetaData(int _id, double _distance, const cv::String &_info);
-    cv::Rect getRect(int _averagelast) const;
+    cv::Rect getRect(int _averagelast=1) const;
 
     int getFramesTracked() const;
     int getMetaId() const;
@@ -52,9 +52,14 @@ public:
     MultyFaceTracker();
     MultyFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_ptr, size_t _maxfaces);
     /**
+     * @brief Detect faces and update tracking information
+     * @param _img - input image
+     */
+    void enrollImage(const cv::Mat &_img);
+    /**
      * @brief Search faces, then crop, resize and return them
-     * @param Img - input image
-     * @param size - output images size
+     * @param _img - input image
+     * @param _size - output images size
      * @return vector of resized faces images along with positional id of corresponding tracked face object
      */
     std::vector<std::pair<size_t,cv::Mat>> getResizedFaceImages(const cv::Mat &_img, const Size &_size, int _averagelast);
@@ -84,7 +89,6 @@ public:
     static cv::Mat  __cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size);
 
 private:
-    void            __enrollImage(const cv::Mat &_img);
     unsigned long   __nextUUID();
 
     cv::Ptr<cv::ofrt::FaceDetector> dPtr;    

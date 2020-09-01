@@ -73,6 +73,7 @@ int main(int argc, char **argv)
     while(videocapture.read(framemat)) {
         mattoshow = framemat.clone();
         // Frame processing block
+        mfacetracker.enrollImage(framemat);
         auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(226,226),1);
         std::vector<cv::Rect> _vrects;
         _vrects.reserve(mfacetracker.maxFaces());

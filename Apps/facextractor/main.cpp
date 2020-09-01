@@ -80,8 +80,7 @@ int main(int argc, char *argv[])
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<uint>(_facesboxes.size()));
                         const cv::Rect _framerect = cv::Rect(0,0,frame.cols,frame.rows);
                         for(size_t j = 0; j < _facesboxes.size(); ++j) {
-                            const cv::Rect _rect = cv::Rect(_facesboxes[j].x,_facesboxes[j].y,
-                                                            _facesboxes[j].width, _facesboxes[j].height) & _framerect;
+                            const cv::Rect _rect = _facesboxes[j] & _framerect;
                             cv::Mat _facemat = cv::ofrt::MultyFaceTracker::__cropInsideFromCenterAndResize(frame(_rect),_targetsize);
                             if(_visualize) {
                                 cv::imshow("Probe",_facemat);
@@ -116,8 +115,7 @@ int main(int argc, char *argv[])
                 qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<uint>(_facesboxes.size()));
                 const cv::Rect _framerect = cv::Rect(0,0,_imgmat.cols,_imgmat.rows);
                 for(size_t j = 0; j < _facesboxes.size(); ++j) {
-                    const cv::Rect _rect = cv::Rect(_facesboxes[j].x,_facesboxes[j].y,
-                                                    _facesboxes[j].width, _facesboxes[j].height) & _framerect;
+                    const cv::Rect _rect = _facesboxes[j] & _framerect;
                     cv::Mat _facemat = cv::ofrt::MultyFaceTracker::__cropInsideFromCenterAndResize(_imgmat(_rect),_targetsize);
                     if(_visualize) {
                         cv::imshow("Probe",_facemat);

@@ -16,6 +16,7 @@ QMultyFaceTracker::QMultyFaceTracker(const cv::Ptr<cv::ofrt::FaceDetector> &_cvp
 void QMultyFaceTracker::enrollImage(const cv::Mat &inputImg)
 {
     if(!inputImg.empty()) {
+        multyfacetracker.enrollImage(inputImg);
         std::vector<std::pair<size_t,cv::Mat>> vfaces = multyfacetracker.getResizedFaceImages(inputImg,targetSize,1);
         for(std::size_t i = 0; i < vfaces.size(); i++) {
             cv::ofrt::TrackedFace *_ptrackedface = multyfacetracker.at(vfaces[i].first);
