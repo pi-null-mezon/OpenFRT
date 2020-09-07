@@ -56,6 +56,11 @@ linux {
             -lopencv_imgcodecs \
             -lopencv_dnn \
             -lopencv_face
+
+    cudabackend {
+        DEFINES+=FORCE_OPENCV_DNN_TO_USE_CUDA
+        message( 'FORCE_OPENCV_DNN_TO_USE_CUDA' defined)
+    }
 }
 
 DEFINES += OPENCV_DIR=\\\"$${OPENCV_DIR}\\\"

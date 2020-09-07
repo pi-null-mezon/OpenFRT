@@ -66,14 +66,15 @@ int main(int argc, char **argv)
     dPtr->setPortions(0.7f,0.7f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
-
     cv::Mat framemat, mattoshow;
     double _frametimems, _timemark = cv::getTickCount();
     std::string timestr;
     while(videocapture.read(framemat)) {
         mattoshow = framemat.clone();
         // Frame processing block
+        double t0 = cv::getTickCount();
         mfacetracker.enrollImage(framemat);
+        std::printf(" face detection: %.1f ms\n", 1000.0*(cv::getTickCount() - t0) / cv::getTickFrequency());
         auto _vfaces = mfacetracker.getResizedFaceImages(framemat,cv::Size(226,226),1);
         std::vector<cv::Rect> _vrects;
         _vrects.reserve(mfacetracker.maxFaces());
@@ -90,7 +91,9 @@ int main(int argc, char **argv)
         }
         if(performlandmarksdetection && (_vrects.size() > 0)) {
             std::vector<std::vector<cv::Point2f>> _vlandmarks;
+            double t0 = cv::getTickCount();
             flandmarks->fit(framemat,_vrects,_vlandmarks);
+            std::printf("  landmarks detection: %.1f ms\n", 1000.0*(cv::getTickCount() - t0) / cv::getTickFrequency());
             for(size_t i = 0; i < _vlandmarks.size(); ++i)
                 for(size_t j = 0; j < _vlandmarks[i].size(); ++j)
                     cv::circle(mattoshow,_vlandmarks[i][j],1,cv::Scalar(255,255,255),1,cv::LINE_AA);

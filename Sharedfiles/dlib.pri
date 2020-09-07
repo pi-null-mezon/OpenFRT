@@ -25,14 +25,13 @@ linux {
     #if Dlib had been built with OpenBLAS
     #CONFIG += openblasbackend
     openblasbackend {
-        message(OpenBLAS backend enabled)
+        message(OpenBLAS backend selected)
         LIBS += -lopenblas
     }
 
     # if Dlib had been built with CUDA
-    CONFIG += cudabackend
     cudabackend {
-        message(CUDA backend enabled)
+        message(CUDA backend selected)
         LIBS += -L/usr/local/cuda/lib64
         LIBS += -lcudnn \
                 -lpthread \
