@@ -59,7 +59,7 @@ linux {
 
     cudabackend {
         DEFINES+=FORCE_OPENCV_DNN_TO_USE_CUDA
-        message( 'FORCE_OPENCV_DNN_TO_USE_CUDA' defined)
+        message('FORCE_OPENCV_DNN_TO_USE_CUDA' defined)
     }
 }
 

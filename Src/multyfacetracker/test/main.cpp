@@ -10,6 +10,7 @@
 #include "cnnfacedetector.h"
 #include "multyfacetracker.h"
 #include "facemarkdlib.h"
+#include "facemarkcnn.h"
 
 using namespace std;
 
@@ -29,6 +30,15 @@ cv::Rect squareRect(const cv::Rect &_source) {
                     _source.height);
 }
 
+cv::Rect squareRectFromCenter(const cv::Rect &_source) {
+    if(_source.width == _source.height)
+        return _source;
+
+    if(_source.height > _source.width)
+        return cv::Rect(_source.x,_source.y + (_source.height-_source.width)/2.0f,_source.width,_source.width);
+    return cv::Rect(_source.x + (_source.width-_source.width)/2.0f,_source.y,_source.height,_source.height);
+}
+
 int main(int argc, char **argv)
 {
     cv::CommandLineParser cmdparser(argc,argv,keys);
@@ -46,7 +56,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkDlib();//cv::face::createFacemarkLBF();
+    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkCNN();//cv::face::createFacemarkDlib();//cv::face::createFacemarkLBF();
     bool performlandmarksdetection = false;
     if(cmdparser.has("landmarks")) {
         flandmarks->loadModel(cmdparser.get<std::string>("landmarks"));
@@ -63,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(0.7f,0.7f);
+    dPtr->setPortions(1.4f,1.4f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
     cv::Mat framemat, mattoshow;
@@ -82,7 +92,7 @@ int main(int argc, char **argv)
             cv::ofrt::TrackedFace *_tf = mfacetracker.at(_vfaces[i].first);
             if(_tf->getFramesTracked() > 0) {
                 string label = string("FT# ") + to_string(_vfaces[i].first) + string(", face guid: ") + std::to_string(_tf->getUuid());
-                cv::Rect _rect = squareRect(_tf->getRect(1));
+                cv::Rect _rect = squareRectFromCenter(_tf->getRect(1));
                 if(performlandmarksdetection)
                     _vrects.push_back(_rect);
                 cv::rectangle(mattoshow,_rect,cv::Scalar(0,255,127),1,cv::LINE_AA);
@@ -95,8 +105,10 @@ int main(int argc, char **argv)
             flandmarks->fit(framemat,_vrects,_vlandmarks);
             std::printf("  landmarks detection: %.1f ms\n", 1000.0*(cv::getTickCount() - t0) / cv::getTickFrequency());
             for(size_t i = 0; i < _vlandmarks.size(); ++i)
-                for(size_t j = 0; j < _vlandmarks[i].size(); ++j)
+                for(size_t j = 0; j < _vlandmarks[i].size(); ++j) {
                     cv::circle(mattoshow,_vlandmarks[i][j],1,cv::Scalar(255,255,255),1,cv::LINE_AA);
+                    cv::putText(mattoshow,std::to_string(j+1),_vlandmarks[i][j]-cv::Point2f(2,2),cv::FONT_HERSHEY_SIMPLEX,0.3,cv::Scalar(0,0,255),1,cv::LINE_AA);
+                }
         }
         for(size_t i = 0; i < _vfaces.size(); ++i) {
             cv::imshow(std::to_string(i),_vfaces[i].second);
