@@ -6,8 +6,6 @@
 
 #include <dlib/dnn.h>
 
-#define FNUM 8
-
 namespace dlib {
 
 template <template <int,template<typename>class,int,typename> class block, int N, template<typename>class BN, typename SUBNET>
@@ -22,17 +20,17 @@ using block  = BN<con<N,3,3,1,1,relu<BN<con<N,3,3,stride,stride,SUBNET>>>>>;
 template <int N, typename SUBNET> using ares      = relu<residual<block,N,affine,SUBNET>>;
 template <int N, typename SUBNET> using ares_down = relu<residual_down<block,N,affine,SUBNET>>;
 
-template <typename SUBNET> using alevel1 = ares_down<16*FNUM,SUBNET>;
-template <typename SUBNET> using alevel2 = ares<8*FNUM,ares_down<8*FNUM,SUBNET>>;
-template <typename SUBNET> using alevel3 = ares<4*FNUM,ares_down<4*FNUM,SUBNET>>;
-template <typename SUBNET> using alevel4 = ares<2*FNUM,ares<2*FNUM,SUBNET>>;
+template <typename SUBNET> using alevel1 = ares_down<128,SUBNET>;
+template <typename SUBNET> using alevel2 = ares<64,ares_down<64,SUBNET>>;
+template <typename SUBNET> using alevel3 = ares<32,ares_down<32,SUBNET>>;
+template <typename SUBNET> using alevel4 = ares<16,ares<16,SUBNET>>;
 
 using facelandmarks_net_type = loss_mean_squared_multioutput<fc_no_bias<136,avg_pool_everything<
                                                     alevel1<
                                                     alevel2<
                                                     alevel3<
                                                     alevel4<
-                                                    relu<affine<con<FNUM,5,5,2,2,
+                                                    relu<affine<con<8,5,5,2,2,
                                                     input_rgb_image >>>>>>>>>>;
 
 }

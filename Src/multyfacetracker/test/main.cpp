@@ -35,8 +35,8 @@ cv::Rect squareRectFromCenter(const cv::Rect &_source) {
         return _source;
 
     if(_source.height > _source.width)
-        return cv::Rect(_source.x,_source.y + (_source.height-_source.width)/2.0f,_source.width,_source.width);
-    return cv::Rect(_source.x + (_source.width-_source.width)/2.0f,_source.y,_source.height,_source.height);
+        return cv::Rect(_source.x,_source.y + (_source.height - _source.width)/2.0f,_source.width,_source.width);
+    return cv::Rect(_source.x + (_source.width - _source.height)/2.0f,_source.y,_source.height,_source.height);
 }
 
 int main(int argc, char **argv)
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,480);
     }
 
-    auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
+    auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"),0.4f);
     dPtr->setPortions(1.5f,1.5f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
