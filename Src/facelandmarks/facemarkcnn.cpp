@@ -73,8 +73,8 @@ bool FacemarkCNN::fit(InputArray image, InputArray faces, OutputArrayOfArrays la
         std::vector<cv::Point2f> _points;
         _points.reserve(dlib::num_rows(prediction));
         for(long i = 0; i < dlib::num_rows(prediction)/2; ++i)
-            _points.push_back(cv::Point2f((0.5f+prediction(2*i))*_roirect.width + _rect.x + _roirect.x,
-                                          (0.5f+prediction(2*i+1))*_roirect.width + _rect.y + _roirect.y));
+            _points.push_back(cv::Point2f((0.5f+prediction(2*i)) * _roirect.width + _rect.x + _roirect.x,
+                                          (0.5f+prediction(2*i+1)) * _roirect.height + _rect.y + _roirect.y));
         _landmarks.push_back(std::move(_points));
     }
 

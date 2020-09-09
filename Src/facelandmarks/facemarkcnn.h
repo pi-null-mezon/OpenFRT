@@ -27,13 +27,13 @@ template <typename SUBNET> using alevel2 = ares<8*FNUM,ares_down<8*FNUM,SUBNET>>
 template <typename SUBNET> using alevel3 = ares<4*FNUM,ares_down<4*FNUM,SUBNET>>;
 template <typename SUBNET> using alevel4 = ares<2*FNUM,ares<2*FNUM,SUBNET>>;
 
-using facelandmarks_net_type = loss_mean_squared_multioutput<fc<136,relu<affine<fc<136,avg_pool_everything<
+using facelandmarks_net_type = loss_mean_squared_multioutput<fc_no_bias<136,avg_pool_everything<
                                                     alevel1<
                                                     alevel2<
                                                     alevel3<
                                                     alevel4<
                                                     relu<affine<con<FNUM,5,5,2,2,
-                                                    input_rgb_image >>>>>>>>>>>>>;
+                                                    input_rgb_image >>>>>>>>>>;
 
 }
 

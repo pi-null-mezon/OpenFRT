@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"));
-    dPtr->setPortions(1.4f,1.4f);
+    dPtr->setPortions(1.5f,1.5f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
     cv::Mat framemat, mattoshow;
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
             for(size_t i = 0; i < _vlandmarks.size(); ++i)
                 for(size_t j = 0; j < _vlandmarks[i].size(); ++j) {
                     cv::circle(mattoshow,_vlandmarks[i][j],1,cv::Scalar(255,255,255),1,cv::LINE_AA);
-                    cv::putText(mattoshow,std::to_string(j+1),_vlandmarks[i][j]-cv::Point2f(2,2),cv::FONT_HERSHEY_SIMPLEX,0.3,cv::Scalar(0,0,255),1,cv::LINE_AA);
+                    //cv::putText(mattoshow,std::to_string(j+1),_vlandmarks[i][j]-cv::Point2f(2,2),cv::FONT_HERSHEY_SIMPLEX,0.3,cv::Scalar(0,0,255),1,cv::LINE_AA);
                 }
         }
         for(size_t i = 0; i < _vfaces.size(); ++i) {
