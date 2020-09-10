@@ -21,6 +21,8 @@ win32 {
     LIBS += -L$${DLIB_INSTALL_PATH}/lib
 }
 
+LIBS += -ldlib
+
 linux {
     #if Dlib had been built with OpenBLAS
     #CONFIG += openblasbackend
@@ -46,5 +48,3 @@ linux {
                 -lpng
     }
 }
-
-LIBS += -ldlib
