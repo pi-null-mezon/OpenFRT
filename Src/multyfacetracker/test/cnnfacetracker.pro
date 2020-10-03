@@ -30,7 +30,3 @@ HEADERS += \
 INCLUDEPATH += $${PWD}/../../facedetector \
                $${PWD}/../../multyfacetracker \
                $${PWD}/../../facelandmarks
-
-linux {
-    #DEFINES += TRY_TO_USE_CUDA
-}

@@ -1,6 +1,6 @@
 #--------------------------------------------------------OPENCV----------------------------------------------------
 win32 {
-    OPENCV_VERSION = 412
+    OPENCV_VERSION = 450
     #Specify a path to the build directory of opencv library and library version    
     OPENCV_DIR = C:/Programming/3rdParties/opencv$${OPENCV_VERSION}/build
     INCLUDEPATH += $${OPENCV_DIR}/include
@@ -14,10 +14,11 @@ win32 {
 
     #Specify the part of OpenCV path corresponding to target architecture
     win32:contains(QMAKE_TARGET.arch, x86_64){
-            OPENCV_ARCHITECTURE_DIR = x64
+        OPENCV_ARCHITECTURE_DIR = x64
     } else {
-            OPENCV_ARCHITECTURE_DIR = x86
+        OPENCV_ARCHITECTURE_DIR = x86
     }
+    win32-g++: OPENCV_ARCHITECTURE_DIR = x86
 
     #A tricky way to resolve debug and release library versions
     defineReplace(qtLibraryName) {

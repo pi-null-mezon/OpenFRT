@@ -56,7 +56,8 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkCNN();//cv::face::createFacemarkDlib();//cv::face::createFacemarkLBF();
+    //cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkCNN();
+    cv::Ptr<cv::face::Facemark> flandmarks = cv::face::createFacemarkDlib();
     bool performlandmarksdetection = false;
     if(cmdparser.has("landmarks")) {
         flandmarks->loadModel(cmdparser.get<std::string>("landmarks"));
@@ -73,7 +74,7 @@ int main(int argc, char **argv)
     }
 
     auto dPtr = cv::ofrt::CNNFaceDetector::createDetector(cmdparser.get<string>("dscr"),cmdparser.get<string>("model"),0.4f);
-    dPtr->setPortions(1.5f,1.5f);
+    dPtr->setPortions(1.2f,1.2f);
     cv::ofrt::MultyFaceTracker mfacetracker(dPtr,16);
 
     cv::Mat framemat, mattoshow;
