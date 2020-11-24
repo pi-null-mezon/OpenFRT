@@ -19,6 +19,8 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
     for(size_t i = 0; i < outLayers.size(); ++i) {
         outputs[i] = layersNames[static_cast<size_t>(outLayers[i]) - 1];
     }
+    // Warming up net to prevent detection-stuck glitch
+    detectFaces(cv::Mat::ones(150,150,CV_8UC3));
 }
 
 CNNFaceDetector::~CNNFaceDetector()
@@ -28,9 +30,9 @@ CNNFaceDetector::~CNNFaceDetector()
 std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 {
 #ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
-    cv::Size _targetsize(150,150);
+    cv::Size _targetsize(140,140);
 #else
-    cv::Size _targetsize(150,150);
+    cv::Size _targetsize(132,132);
 #endif
     float _sX,_sY;
     cv::Point2f _oshift;
