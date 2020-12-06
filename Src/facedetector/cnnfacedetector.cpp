@@ -30,7 +30,7 @@ CNNFaceDetector::~CNNFaceDetector()
 std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 {
 #ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
-    cv::Size _targetsize(140,140);
+    cv::Size _targetsize(132,132);
 #else
     cv::Size _targetsize(132,132);
 #endif
