@@ -19,8 +19,6 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
     for(size_t i = 0; i < outLayers.size(); ++i) {
         outputs[i] = layersNames[static_cast<size_t>(outLayers[i]) - 1];
     }
-    // Warming up net to prevent detection-stuck glitch
-    detectFaces(cv::Mat::ones(150,150,CV_8UC3));
 }
 
 CNNFaceDetector::~CNNFaceDetector()
@@ -38,7 +36,7 @@ std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
     cv::Mat blob;
-    cv::dnn::blobFromImage(_fixedcanvasimg,blob,1,cv::Size(),cv::Scalar(104,177,123),false,false);
+    cv::dnn::blobFromImage(_fixedcanvasimg,blob,1.0,cv::Size(),cv::Scalar(104,177,123),false,false);
     net.setInput(blob);
     std::vector<cv::Mat> outs;
     net.forward(outs,outputs);
