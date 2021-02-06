@@ -29,9 +29,9 @@ CNNFaceDetector::~CNNFaceDetector()
 std::vector<Rect> CNNFaceDetector::detectFaces(InputArray &_img) const
 {
 #ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
-    cv::Size _targetsize(132,132);
+    cv::Size _targetsize(131,131);
 #else
-    cv::Size _targetsize(132,132);
+    cv::Size _targetsize(131,131);
 #endif
     float _sX,_sY;
     cv::Point2f _oshift;
