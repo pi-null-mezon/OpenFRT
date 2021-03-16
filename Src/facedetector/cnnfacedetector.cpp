@@ -19,7 +19,6 @@ CNNFaceDetector::CNNFaceDetector(const std::string &_txtfilename, const std::str
     for(size_t i = 0; i < outLayers.size(); ++i) {
         outputs[i] = layersNames[static_cast<size_t>(outLayers[i]) - 1];
     }
-    detectFaces(cv::Mat::ones(100,100,CV_8UC3));
 }
 
 CNNFaceDetector::~CNNFaceDetector()
