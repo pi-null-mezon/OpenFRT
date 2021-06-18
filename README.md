@@ -1,15 +1,13 @@
 OpenFRT
 ===
 
-Set of applications for face recognition
+A set of tools for face recognition
 
 **Sample**
 
 [![fv2db](https://img.youtube.com/vi/diXRtskXeEQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=diXRtskXeEQ)
 
-**Install**
-
-1. First install 3rdParties:
+**Install dependencies**
 
 - [opencv](https://opencv.org/)
 
@@ -17,7 +15,7 @@ Set of applications for face recognition
 
 - [qt](https://www.qt.io/)
 
-2. Then:
+**Build and run**
 
 ```
 git clone https://github.com/OpenIRT.git && \
