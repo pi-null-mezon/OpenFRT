@@ -17,11 +17,13 @@ const cv::String _options = "{help h               |                        | th
                             "{outputdir o          |                        | output directory with images                                  }"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
-                            "{confthresh           | 0.25                   | confidence threshold for the face detector                    }"
+                            "{confthresh           | 0.3                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 90.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 300                    | target image width                                            }"
                             "{targetheight         | 400                    | target image height                                           }"
+                            "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
+                            "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | true                   | enable/disable filenames preservation                         }";
@@ -65,6 +67,8 @@ int main(int argc, char *argv[])
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
     const bool _visualize = _cmdparser.get<bool>("visualize");
     const bool _preservefilenames = _cmdparser.get<bool>("preservefilenames");
+    const float h2wshift = _cmdparser.get<float>("h2wshift");
+    const float v2hshift = _cmdparser.get<float>("v2hshift");
 
     if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
@@ -80,7 +84,7 @@ int main(int argc, char *argv[])
                     if(_faces.size() != 0) {
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                         for(size_t j = 0; j < _faces.size(); ++j) {
-                            const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize);
+                            const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
@@ -114,7 +118,7 @@ int main(int argc, char *argv[])
                 } else {
                     qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
                     for(size_t j = 0; j < _faces.size(); ++j) {
-                        const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize);
+                        const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
                         if(_visualize) {
                             cv::imshow("Probe",_facepatch);
                             cv::waitKey(1);
