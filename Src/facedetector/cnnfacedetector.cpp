@@ -85,10 +85,10 @@ Mat CNNFaceDetector::resizeAndPasteInCenterOfCanvas(const Mat &_img, const Size 
     cv::Mat _resizedimg;
     cv::resize(_img,_resizedimg,_targetsize,0,0,_interptype);
 
-    cv::Rect _canvascenterregion = cv::Rect2f((_canvassize.width - _targetsize.width)/2.0f,
-                                              (_canvassize.height - _targetsize.height)/2.0f,
-                                               _targetsize.width,
-                                               _targetsize.height) & cv::Rect2f(0,0,_canvassize.width,_canvassize.height);
+    cv::Rect _canvascenterregion = cv::Rect((_canvassize.width - _targetsize.width)/2,
+                                            (_canvassize.height - _targetsize.height)/2,
+                                             _targetsize.width,
+                                             _targetsize.height) & cv::Rect(0,0,_canvassize.width,_canvassize.height);
     _originshift = _canvascenterregion.tl();
     _resizedimg.copyTo(_canvasmat(_canvascenterregion));
     return _canvasmat;
