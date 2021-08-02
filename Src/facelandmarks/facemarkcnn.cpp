@@ -15,9 +15,9 @@ dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat)
 }
 
 
-cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect2f &roiRect)
+cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect &roiRect)
 {
-    roiRect = cv::Rect2f(0,0,0,0);
+    roiRect = cv::Rect(0,0,0,0);
     if(static_cast<float>(input.cols)/input.rows > static_cast<float>(size.width)/size.height) {
         roiRect.height = static_cast<float>(input.rows);
         roiRect.width = input.rows * static_cast<float>(size.width)/size.height;
@@ -27,7 +27,7 @@ cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size
         roiRect.height = input.cols * static_cast<float>(size.height)/size.width;
         roiRect.y = (input.rows - roiRect.height)/2.0f;
     }
-    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(input.cols), static_cast<float>(input.rows));
+    roiRect &= cv::Rect(0, 0, input.cols, input.rows);
     cv::Mat output;
     if(roiRect.area() > 0)  {
         cv::Mat croppedImg(input, roiRect);
@@ -67,7 +67,7 @@ bool FacemarkCNN::fit(InputArray image, InputArray faces, OutputArrayOfArrays la
 
     cv::Mat mat = image.getMat();
     for(const auto &_rect : _faces) {
-        cv::Rect2f _roirect;
+        cv::Rect _roirect;
         dlib::matrix<float> prediction = net(cvmat2dlibmatrix(cropInsideFromCenterAndResize(mat(_rect & cv::Rect(0,0,mat.cols,mat.rows)),isize,_roirect)));
 
         std::vector<cv::Point2f> _points;

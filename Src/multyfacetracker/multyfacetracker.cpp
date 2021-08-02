@@ -52,7 +52,7 @@ void MultyFaceTracker::clear()
 
 Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Size &size)
 {
-    cv::Rect2f roiRect(0,0,0,0);
+    cv::Rect roiRect(0,0,0,0);
     if(static_cast<float>(input.cols)/input.rows > static_cast<float>(size.width)/size.height) {
         roiRect.height = static_cast<float>(input.rows);
         roiRect.width = input.rows * static_cast<float>(size.width)/size.height;
@@ -62,7 +62,7 @@ Mat MultyFaceTracker::__cropInsideFromCenterAndResize(const Mat &input, const Si
         roiRect.height = input.cols * static_cast<float>(size.height)/size.width;
         roiRect.y = (input.rows - roiRect.height)/2.0f;
     }
-    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(input.cols), static_cast<float>(input.rows));
+    roiRect &= cv::Rect(0, 0, input.cols, input.rows);
     cv::Mat output;
     if(roiRect.area() > 0)  {
         cv::Mat croppedImg(input, roiRect);
