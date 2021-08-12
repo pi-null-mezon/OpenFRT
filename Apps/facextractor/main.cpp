@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
                 qInfo("%d) %s - could not decode image!", i, _fileslist.at(i).toUtf8().constData());
             }
         }
-        qInfo("Done, percentage of images without faces: %d / %d", static_cast<int>(_fileslist.size() - _facenotfound), _fileslist.size());
+        qInfo("Done, percentage of images without faces: %d / %d", static_cast<int>(_facenotfound), _fileslist.size());
     } else {
         qWarning("You have not specified any input. Nor videofile nor directory! Abort...");
         return 1;
