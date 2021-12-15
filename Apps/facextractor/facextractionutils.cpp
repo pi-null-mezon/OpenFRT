@@ -11,7 +11,7 @@ cv::Rect squareRectFromCenter(const cv::Rect &_source)
     return cv::Rect(_source.x, _source.y + (_source.height - _source.width) / 2, _source.width, _source.width);
 }
 
-cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift)
+cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate)
 {
     static uint8_t _reye[] = {36,37,38,39,40,41};
     static uint8_t _leye[] = {42,43,44,45,46,47};
@@ -29,7 +29,7 @@ cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> 
         cv::Point2f _cd = _lc - _rc;
         float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
         float _scale = _targeteyesdistance / _eyesdistance;
-        float _angle = 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI);
+        float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
         cv::Point2f _cp = (_rc + _lc)/2.0f;
         cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
         _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x + h2wshift * _targetsize.width;

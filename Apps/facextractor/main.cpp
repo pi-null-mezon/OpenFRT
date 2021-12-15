@@ -24,9 +24,11 @@ const cv::String _options = "{help h               |                        | th
                             "{targetheight         | 400                    | target image height                                           }"
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
+                            "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
                             "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
-                            "{preservefilenames    | false                  | enable/disable filenames preservation                         }";
+                            "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
+                            "{preservesubdirnames  | false                  | enable/disable subdirs preservation                           }";
 
 std::vector<QString> find_all_subdirs_in_path(const QString &path);
 
@@ -69,8 +71,10 @@ int main(int argc, char *argv[])
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
     const bool _visualize = _cmdparser.get<bool>("visualize");
     const bool _preservefilenames = _cmdparser.get<bool>("preservefilenames");
+    const bool _preservesubdirnames = _cmdparser.get<bool>("preservesubdirnames");
     const float h2wshift = _cmdparser.get<float>("h2wshift");
     const float v2hshift = _cmdparser.get<float>("v2hshift");
+    const bool rotate = _cmdparser.get<bool>("rotate");
 
     if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
@@ -86,7 +90,7 @@ int main(int argc, char *argv[])
                     if(_faces.size() != 0) {
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                         for(size_t j = 0; j < _faces.size(); ++j) {
-                            const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
+                            const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
@@ -113,6 +117,11 @@ int main(int argc, char *argv[])
             QString subdirname = absolute_subdir_name.section('/',-1);
             QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
             qInfo("There is %d pictures has been found in the '%s'", _fileslist.size(), subdirname.toUtf8().constData());
+            QString target_output_path = _outdir.absolutePath();
+            if(_fileslist.size() > 0 && _preservesubdirnames) {
+                _outdir.mkdir(subdirname);
+                target_output_path = target_output_path.append("/%1").arg(subdirname);
+            }
             for(int i = 0; i < _fileslist.size(); ++i) {
                 _totalfiles++;
                 cv::Mat _imgmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
@@ -124,17 +133,17 @@ int main(int argc, char *argv[])
                     } else {
                         qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
                         for(size_t j = 0; j < _faces.size(); ++j) {
-                            const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
+                            const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
                             }
                             if(!_preservefilenames)
-                                cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2.jpg").arg(target_output_path,QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
                             else if( _faces.size() == 1)
-                                cv::imwrite(QString("%1/%2").arg(_outdir.absolutePath(),_fileslist.at(i)).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2").arg(target_output_path,_fileslist.at(i)).toUtf8().constData(),_facepatch);
                             else
-                                cv::imwrite(QString("%1/%2_%3").arg(_outdir.absolutePath(),QString::number(j),_fileslist.at(i)).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2_%3").arg(target_output_path,QString::number(j),_fileslist.at(i)).toUtf8().constData(),_facepatch);
                         }
                     }
                 } else {
