@@ -26,7 +26,9 @@ const cv::String _options = "{help h               |                        | th
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
-                            "{preservefilenames    | true                   | enable/disable filenames preservation                         }";
+                            "{preservefilenames    | false                  | enable/disable filenames preservation                         }";
+
+std::vector<QString> find_all_subdirs_in_path(const QString &path);
 
 int main(int argc, char *argv[])
 {
@@ -101,44 +103,64 @@ int main(int argc, char *argv[])
             return 5;
         }
     } else if(_cmdparser.has("inputdir")) {
-        QDir _indir(_cmdparser.get<cv::String>("inputdir").c_str());
+        size_t _facenotfound = 0;
+        size_t _totalfiles = 0;
         QStringList _filters;
         _filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp";
-        QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
-        qInfo("There is %d pictures has been found in the input directory", _fileslist.size());
-
-        size_t _facenotfound = 0;
-        for(int i = 0; i < _fileslist.size(); ++i) {
-            cv::Mat _imgmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
-            if(!_imgmat.empty()) {
-                const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(_imgmat,facedetector,facelandmarker);
-                if(_faces.size() == 0) {
-                    qInfo("%d) %s - could not find any faces!", i, _fileslist.at(i).toUtf8().constData());
-                    _facenotfound++;
-                } else {
-                    qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
-                    for(size_t j = 0; j < _faces.size(); ++j) {
-                        const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
-                        if(_visualize) {
-                            cv::imshow("Probe",_facepatch);
-                            cv::waitKey(1);
+        const std::vector<QString> absolute_paths = find_all_subdirs_in_path(_cmdparser.get<cv::String>("inputdir").c_str());
+        for(const auto & absolute_subdir_name : absolute_paths) {
+            QDir _indir(absolute_subdir_name);
+            QString subdirname = absolute_subdir_name.section('/',-1);
+            QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
+            qInfo("There is %d pictures has been found in the '%s'", _fileslist.size(), subdirname.toUtf8().constData());
+            for(int i = 0; i < _fileslist.size(); ++i) {
+                _totalfiles++;
+                cv::Mat _imgmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
+                if(!_imgmat.empty()) {
+                    const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(_imgmat,facedetector,facelandmarker);
+                    if(_faces.size() == 0) {
+                        qInfo("%d) %s - could not find any faces!", i, _fileslist.at(i).toUtf8().constData());
+                        _facenotfound++;
+                    } else {
+                        qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
+                        for(size_t j = 0; j < _faces.size(); ++j) {
+                            const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift);
+                            if(_visualize) {
+                                cv::imshow("Probe",_facepatch);
+                                cv::waitKey(1);
+                            }
+                            if(!_preservefilenames)
+                                cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
+                            else if( _faces.size() == 1)
+                                cv::imwrite(QString("%1/%2").arg(_outdir.absolutePath(),_fileslist.at(i)).toUtf8().constData(),_facepatch);
+                            else
+                                cv::imwrite(QString("%1/%2_%3").arg(_outdir.absolutePath(),QString::number(j),_fileslist.at(i)).toUtf8().constData(),_facepatch);
                         }
-                        if(!_preservefilenames)
-                            cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
-                        else if( _faces.size() == 1)
-                            cv::imwrite(QString("%1/%2").arg(_outdir.absolutePath(),_fileslist.at(i)).toUtf8().constData(),_facepatch);
-                        else
-                            cv::imwrite(QString("%1/%2_%3").arg(_outdir.absolutePath(),QString::number(j),_fileslist.at(i)).toUtf8().constData(),_facepatch);
                     }
+                } else {
+                    qInfo("%d) %s - could not decode image!", i, _fileslist.at(i).toUtf8().constData());
                 }
-            } else {
-                qInfo("%d) %s - could not decode image!", i, _fileslist.at(i).toUtf8().constData());
             }
         }
-        qInfo("Done, percentage of images without faces: %d / %d", static_cast<int>(_facenotfound), _fileslist.size());
+        qInfo("Done, percentage of images without faces: %lu / %lu", static_cast<unsigned long>(_facenotfound), static_cast<unsigned long>(_totalfiles));
     } else {
         qWarning("You have not specified any input. Nor videofile nor directory! Abort...");
         return 1;
     }
     return 0;
+}
+
+
+std::vector<QString> find_all_subdirs_in_path(const QString &path) {
+    std::vector<QString> all_levels_subdirs_list;
+    QDir dir(path);
+    const QStringList subdirsnames = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    if(subdirsnames.size() > 0) {
+        for(const QString &subdirname: subdirsnames) {
+            std::vector<QString> subdirs_list = find_all_subdirs_in_path(QString("%1/%2").arg(path,subdirname));
+            all_levels_subdirs_list.insert(all_levels_subdirs_list.end(),subdirs_list.begin(),subdirs_list.end());
+        }
+    } else
+        all_levels_subdirs_list.push_back(path);
+    return all_levels_subdirs_list;
 }
