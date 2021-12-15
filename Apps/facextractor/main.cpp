@@ -28,7 +28,7 @@ const cv::String _options = "{help h               |                        | th
                             "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
-                            "{preservesubdirnames  | false                  | enable/disable subdirs preservation                           }";
+                            "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }";
 
 std::vector<QString> find_all_subdirs_in_path(const QString &path);
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
     const bool _visualize = _cmdparser.get<bool>("visualize");
     const bool _preservefilenames = _cmdparser.get<bool>("preservefilenames");
-    const bool _preservesubdirnames = _cmdparser.get<bool>("preservesubdirnames");
+    const bool _preservesubdirnames = _cmdparser.get<bool>("preservesubdirs");
     const float h2wshift = _cmdparser.get<float>("h2wshift");
     const float v2hshift = _cmdparser.get<float>("v2hshift");
     const bool rotate = _cmdparser.get<bool>("rotate");
@@ -111,16 +111,17 @@ int main(int argc, char *argv[])
         size_t _totalfiles = 0;
         QStringList _filters;
         _filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp";
+        const QString input_directory = _cmdparser.get<cv::String>("inputdir").c_str();
         const std::vector<QString> absolute_paths = find_all_subdirs_in_path(_cmdparser.get<cv::String>("inputdir").c_str());
         for(const auto & absolute_subdir_name : absolute_paths) {
             QDir _indir(absolute_subdir_name);
-            QString subdirname = absolute_subdir_name.section('/',-1);
+            QString subdirname = absolute_subdir_name.section(input_directory,1);
             QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
             qInfo("There is %d pictures has been found in the '%s'", _fileslist.size(), subdirname.toUtf8().constData());
             QString target_output_path = _outdir.absolutePath();
             if(_fileslist.size() > 0 && _preservesubdirnames) {
-                _outdir.mkdir(subdirname);
                 target_output_path = target_output_path.append("/%1").arg(subdirname);
+                _outdir.mkpath(target_output_path);
             }
             for(int i = 0; i < _fileslist.size(); ++i) {
                 _totalfiles++;
