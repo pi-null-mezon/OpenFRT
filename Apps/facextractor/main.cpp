@@ -28,7 +28,8 @@ const cv::String _options = "{help h               |                        | th
                             "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
-                            "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }";
+                            "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }"
+                            "{codec                | jpg                    | encoding format to save extracted faces                       }";
 
 std::vector<QString> find_all_subdirs_in_path(const QString &path);
 
@@ -75,6 +76,7 @@ int main(int argc, char *argv[])
     const float h2wshift = _cmdparser.get<float>("h2wshift");
     const float v2hshift = _cmdparser.get<float>("v2hshift");
     const bool rotate = _cmdparser.get<bool>("rotate");
+    const QString extension = _cmdparser.get<std::string>("codec").c_str();
 
     if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
@@ -133,6 +135,7 @@ int main(int argc, char *argv[])
                         _facenotfound++;
                     } else {
                         qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
+                        const QString filename_woext = _fileslist.at(i).section('.',0,0);
                         for(size_t j = 0; j < _faces.size(); ++j) {
                             const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
@@ -140,11 +143,11 @@ int main(int argc, char *argv[])
                                 cv::waitKey(1);
                             }
                             if(!_preservefilenames)
-                                cv::imwrite(QString("%1/%2.jpg").arg(target_output_path,QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2.%3").arg(target_output_path,QUuid::createUuid().toString(),extension).toUtf8().constData(),_facepatch);
                             else if( _faces.size() == 1)
-                                cv::imwrite(QString("%1/%2").arg(target_output_path,_fileslist.at(i)).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2.%3").arg(target_output_path,filename_woext,extension).toUtf8().constData(),_facepatch);
                             else
-                                cv::imwrite(QString("%1/%2_%3").arg(target_output_path,QString::number(j),_fileslist.at(i)).toUtf8().constData(),_facepatch);
+                                cv::imwrite(QString("%1/%2_%3.%4").arg(target_output_path,QString::number(j),filename_woext,extension).toUtf8().constData(),_facepatch);
                         }
                     }
                 } else {
