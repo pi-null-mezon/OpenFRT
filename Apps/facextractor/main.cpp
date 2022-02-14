@@ -17,7 +17,7 @@ const cv::String _options = "{help h               |                        | th
                             "{outputdir o          |                        | output directory with images                                  }"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
-                            "{confthresh           | 0.3                    | confidence threshold for the face detector                    }"
+                            "{confthresh           | 0.8                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 90.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 300                    | target image width                                            }"
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
             QDir _indir(absolute_subdir_name);
             QString subdirname = absolute_subdir_name.section(input_directory,1);
             QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
-            qInfo("There is %d pictures has been found in the '%s'", _fileslist.size(), subdirname.toUtf8().constData());
+            qInfo("There is %u pictures has been found in the '%s'", static_cast<uint>(_fileslist.size()), subdirname.toUtf8().constData());
             QString target_output_path = _outdir.absolutePath();
             if(_fileslist.size() > 0 && _preservesubdirnames) {
                 target_output_path = target_output_path.append("/%1").arg(subdirname);
