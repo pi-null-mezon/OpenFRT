@@ -19,9 +19,9 @@ const cv::String _options = "{help h               |                        | th
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
                             "{confthresh           | 0.8                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
-                            "{targeteyesdistance   | 90.0                   | target distance between eyes                                  }"
-                            "{targetwidth          | 300                    | target image width                                            }"
-                            "{targetheight         | 400                    | target image height                                           }"
+                            "{targeteyesdistance   | 30.0                   | target distance between eyes                                  }"
+                            "{targetwidth          | 150                    | target image width                                            }"
+                            "{targetheight         | 150                    | target image height                                           }"
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
@@ -29,7 +29,7 @@ const cv::String _options = "{help h               |                        | th
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
                             "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }"
-                            "{codec                | jpg                    | encoding format to save extracted faces                       }";
+                            "{codec                | png                    | encoding format to save extracted faces                       }";
 
 std::vector<QString> find_all_subdirs_in_path(const QString &path);
 

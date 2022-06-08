@@ -21,3 +21,5 @@ unix: {
 
 HEADERS += \
     facextractionutils.h
+
+DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=350
