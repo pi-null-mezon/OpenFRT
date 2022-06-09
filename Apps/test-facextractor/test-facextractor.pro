@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 
 SOURCES += main.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
+    ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
     #../../Src/facelandmarks/facemarkcnn.cpp \
     ../../Src/facelandmarks/facemarklitecnn.cpp \
@@ -23,4 +24,4 @@ unix: {
 HEADERS += \
     facextractionutils.h
 
-DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=131
+#DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=150

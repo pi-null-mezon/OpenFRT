@@ -8,7 +8,8 @@
 #include <opencv2/imgproc.hpp>
 
 #include "cnnfacedetector.h"
-//#include "facemarkcnn.h"
+#include "yunetfacedetector.h"
+#include "facemarkcnn.h"
 #include "facemarklitecnn.h"
 
 #include "facextractionutils.h"
@@ -49,8 +50,10 @@ int main(int argc, char *argv[])
         qWarning("You have not specified face detector description filename! Abort...");
         return 4;
     }
-    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
+                                                                                             _cmdparser.get<float>("confthresh"));*/
+    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
     cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkLiteCNN();
     facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
@@ -101,22 +104,27 @@ int main(int argc, char *argv[])
             while(videocapture.read(frame)) {
                 float t0 = cv::getTickCount();
                 const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+                /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
+                const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
                 float duration_ms = 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 if(_faces.size() != 0) {
                     qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                     for(size_t j = 0; j < _faces.size(); ++j) {
-                        const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
-                        cv::putText(_facepatch,QString("%1 ms").arg(QString::number(duration_ms,'f',1)).toStdString(),
-                                    cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
-                        cv::putText(_facepatch,QString("%1 ms").arg(QString::number(duration_ms,'f',1)).toStdString(),
-                                    cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
-                        if(_visualize) {
-                            cv::imshow("Probe",_facepatch);
-                            cv::waitKey(1);
+                        //const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                        for(const auto &pt: _faces[j]) {
+                            cv::circle(frame,pt,1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
                         }
-                    }
-                } else
-                    qInfo("frame %lu - no faces", framenum);
+                    }                  
+                }
+                if(_visualize) {
+                    cv::putText(frame,QString("%1 ms").arg(QString::number(duration_ms,'f',1)).toStdString(),
+                                cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(frame,QString("%1 ms").arg(QString::number(duration_ms,'f',1)).toStdString(),
+                                cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
+
+                    cv::imshow("Probe",frame);
+                    cv::waitKey(1);
+                }
                 framenum++;
             }
         } else {
