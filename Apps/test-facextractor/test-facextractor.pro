@@ -6,8 +6,8 @@ SOURCES += main.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
-    #../../Src/facelandmarks/facemarkcnn.cpp \
-    ../../Src/facelandmarks/facemarklitecnn.cpp \
+    ../../Src/facelandmarks/facemarkcnn.cpp \
+    #../../Src/facelandmarks/facemarklitecnn.cpp \
     facextractionutils.cpp
 
 INCLUDEPATH += ../../Src/facedetector \
