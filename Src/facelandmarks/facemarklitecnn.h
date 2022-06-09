@@ -20,14 +20,14 @@ using block  = BN<con<N,3,3,1,1,relu<BN<con<N,3,3,stride,stride,SUBNET>>>>>;
 template <int N, typename SUBNET> using ares      = relu<residual<block,N,affine,SUBNET>>;
 template <int N, typename SUBNET> using ares_down = relu<residual_down<block,N,affine,SUBNET>>;
 
-template <typename SUBNET> using alevel2 = ares<32,ares_down<32,SUBNET>>;
-template <typename SUBNET> using alevel3 = ares<16,ares_down<16,SUBNET>>;
-template <typename SUBNET> using alevel4 = ares<8,ares_down<8,SUBNET>>;
+template <typename SUBNET> using alite2 = ares<32,ares_down<32,SUBNET>>;
+template <typename SUBNET> using alite3 = ares<16,ares_down<16,SUBNET>>;
+template <typename SUBNET> using alite4 = ares<8,ares_down<8,SUBNET>>;
 
-using facelandmarks_net_type = loss_mean_squared_multioutput<fc_no_bias<136,avg_pool_everything<
-                                                    alevel2<
-                                                    alevel3<
-                                                    alevel4<
+using facelandmarks_lite_net_type = loss_mean_squared_multioutput<fc_no_bias<136,avg_pool_everything<
+                                                    alite2<
+                                                    alite3<
+                                                    alite4<
                                                     relu<affine<con<4,5,5,2,2,
                                                     input_rgb_image >>>>>>>>>;
 
@@ -50,7 +50,7 @@ public:
               OutputArrayOfArrays landmarks);
 
 private:
-    mutable dlib::facelandmarks_net_type net;
+    mutable dlib::facelandmarks_lite_net_type net;
     cv::Size isize;
 };
 
