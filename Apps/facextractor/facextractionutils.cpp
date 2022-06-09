@@ -17,8 +17,8 @@ cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> 
     static uint8_t _leye[] = {42,43,44,45,46,47};
 
     cv::Mat _patch;
-    if(_landmarks.size() == 68) {
-        cv::Point2f _rc(0,0), _lc(0,0);
+    cv::Point2f _rc(0,0), _lc(0,0);
+    if(_landmarks.size() == 68) {    
         int _len = sizeof(_reye)/sizeof(_reye[0]);
         for(int i = 0; i < _len; ++i) {
             _rc += _landmarks[_reye[i]];
@@ -26,20 +26,24 @@ cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> 
         }
         _rc /= _len;
         _lc /= _len;
-        cv::Point2f _cd = _lc - _rc;
-        float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
-        float _scale = _targeteyesdistance / _eyesdistance;
-        float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
-        cv::Point2f _cp = (_rc + _lc)/2.0f;
-        cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
-        _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x + h2wshift * _targetsize.width;
-        _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y + v2hshift * _targetsize.height;
-
-        int _interpolationtype = cv::INTER_LINEAR;
-        if(_scale < 1.0)
-            _interpolationtype = cv::INTER_AREA;
-        cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);      
+    } else if (_landmarks.size() == 5) {
+        _rc = _landmarks[0];
+        _lc = _landmarks[1];
     }
+    cv::Point2f _cd = _lc - _rc;
+    float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
+    float _scale = _targeteyesdistance / _eyesdistance;
+    float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
+    cv::Point2f _cp = (_rc + _lc)/2.0f;
+    cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
+    _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x + h2wshift * _targetsize.width;
+    _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y + v2hshift * _targetsize.height;
+
+    int _interpolationtype = cv::INTER_LINEAR;
+    if(_scale < 1.0)
+        _interpolationtype = cv::INTER_AREA;
+    cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);
+
     return _patch;
 }
 

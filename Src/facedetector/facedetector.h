@@ -16,7 +16,7 @@ public:
     /**
      * @brief detectFaces - should return bounding boxes for all faces detected on image
      * @param _img - input image
-     * @return vector of biunding boxes
+     * @return vector of bounding boxes
      */
     virtual std::vector<Rect> detectFaces(InputArray &_img) const = 0;
     /**
