@@ -3,6 +3,7 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 
 SOURCES += main.cpp \
+    ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
@@ -21,3 +22,5 @@ unix: {
 
 HEADERS += \
     facextractionutils.h
+
+#DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=350

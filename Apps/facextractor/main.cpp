@@ -7,6 +7,7 @@
 #include <opencv2/videoio.hpp>
 
 #include "cnnfacedetector.h"
+#include "yunetfacedetector.h"
 #include "facemarkcnn.h"
 
 #include "facextractionutils.h"
@@ -19,9 +20,9 @@ const cv::String _options = "{help h               |                        | th
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
                             "{confthresh           | 0.8                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
-                            "{targeteyesdistance   | 90.0                   | target distance between eyes                                  }"
-                            "{targetwidth          | 300                    | target image width                                            }"
-                            "{targetheight         | 400                    | target image height                                           }"
+                            "{targeteyesdistance   | 30.0                   | target distance between eyes                                  }"
+                            "{targetwidth          | 150                    | target image width                                            }"
+                            "{targetheight         | 150                    | target image height                                           }"
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
@@ -29,7 +30,7 @@ const cv::String _options = "{help h               |                        | th
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
                             "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }"
-                            "{codec                | jpg                    | encoding format to save extracted faces                       }";
+                            "{codec                | png                    | encoding format to save extracted faces                       }";
 
 std::vector<QString> find_all_subdirs_in_path(const QString &path);
 
@@ -64,9 +65,10 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
+                                                                                               _cmdparser.get<float>("confthresh"));*/
     cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkCNN();
     facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
-
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
@@ -130,6 +132,8 @@ int main(int argc, char *argv[])
                 cv::Mat _imgmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
                 if(!_imgmat.empty()) {
                     const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(_imgmat,facedetector,facelandmarker);
+                    /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yundet = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
+                    const std::vector<std::vector<cv::Point2f>> _faces = yundet->detectLandmarks(_imgmat);*/
                     if(_faces.size() == 0) {
                         qInfo("%d) %s - could not find any faces!", i, _fileslist.at(i).toUtf8().constData());
                         _facenotfound++;
