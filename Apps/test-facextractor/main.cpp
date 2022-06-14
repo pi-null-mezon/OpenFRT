@@ -11,11 +11,12 @@
 #include "yunetfacedetector.h"
 #include "facemarkcnn.h"
 #include "facemarklitecnn.h"
+#include "facebestshot.h"
 
 #include "facextractionutils.h"
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
-                            "{device               | 0                      | video device                                   }"
+                            "{device               | 0                      | video device                                                  }"
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
@@ -27,7 +28,8 @@ const cv::String _options = "{help h               |                        | th
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
-                            "{visualize v          | true                   | enable/disable visualization option                           }";
+                            "{visualize v          | true                   | enable/disable visualization option                           }"
+                            "{bestshotmodel        | facebestshot_net.dat   | face bestshot detector model                                  }";
 
 int main(int argc, char *argv[])
 {
@@ -57,6 +59,8 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));
     cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkCNN();
     facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
+
+    cv::Ptr<cv::ofrt::FaceClassifier> bestshotdetector = cv::ofrt::FaceBestshot::createClassifier(_cmdparser.get<std::string>("bestshotmodel"));
 
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
@@ -120,7 +124,10 @@ int main(int argc, char *argv[])
                 if(_faces.size() != 0) {
                     //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                     for(size_t j = 0; j < _faces.size(); ++j) {
-                        const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                        std::vector<float> probs = bestshotdetector->classify(frame,_faces[j]);
+
+
+                        //const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                         for(const auto &pt: _faces[j])
                             cv::circle(frame,pt,1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
                     }                  
@@ -130,7 +137,6 @@ int main(int argc, char *argv[])
                                 cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(frame,QString("%1 ms").arg(QString::number(duration_ms,'f',1)).toStdString(),
                                 cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
-
                     cv::imshow("Probe",frame);
                     cv::waitKey(1);
                 }

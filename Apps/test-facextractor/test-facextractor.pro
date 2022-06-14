@@ -3,6 +3,8 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 
 SOURCES += main.cpp \
+    ../../Src/faceclassifier/facebestshot.cpp \
+    ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
@@ -11,7 +13,8 @@ SOURCES += main.cpp \
     facextractionutils.cpp
 
 INCLUDEPATH += ../../Src/facedetector \
-               ../../Src/facelandmarks
+               ../../Src/facelandmarks \
+               ../../Src/faceclassifier
 
 include($${PWD}/../../Sharedfiles/opencv.pri)
 include($${PWD}/../../Sharedfiles/dlib.pri)
