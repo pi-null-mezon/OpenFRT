@@ -1,6 +1,6 @@
 #include "facebestshot.h"
 
-#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 namespace cv { namespace ofrt {
 
@@ -18,8 +18,7 @@ FaceBestshot::FaceBestshot(const std::string &modelfilename) :
 
 std::vector<float> FaceBestshot::classify(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks)
 {
-    cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true);
-    cv::imshow("patch", cv_facepatch);
+    cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true,cv::INTER_LINEAR);
     dlib::matrix<dlib::rgb_pixel> dlib_facepatch = cvmat2dlibmatrix(cv_facepatch);
     dlib::matrix<float,1,2> p = dlib::mat(snet(dlib_facepatch));
     std::vector<float> probs(dlib::num_columns(p),0);
@@ -30,8 +29,7 @@ std::vector<float> FaceBestshot::classify(const cv::Mat &img, const std::vector<
 
 float FaceBestshot::confidence(const Mat &img, const std::vector<Point2f> &landmarks)
 {
-    std::vector<float> confidences = classify(img,landmarks);
-    return confidences[0];
+    return classify(img,landmarks)[1];
 }
 
 Ptr<FaceClassifier> FaceBestshot::createClassifier(const std::string &modelfilename)

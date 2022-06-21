@@ -22,7 +22,8 @@ public:
                              const cv::Size &_targetsize,
                              float h2wshift,
                              float v2hshift,
-                             bool rotate);
+                             bool rotate,
+                             int _interpolationtype);
 
     virtual std::vector<float> classify(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) = 0;
 

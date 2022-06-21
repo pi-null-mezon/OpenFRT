@@ -13,11 +13,10 @@ using block  = BN<con<N,3,3,1,1,relu<BN<con<N,3,3,stride,stride,SUBNET>>>>>;
 
 template <int N, typename SUBNET> using ares_down = relu<residual_down<block,N,affine,SUBNET>>;
 
-using bestshot_net_type = loss_multiclass_log<fc<2,avg_pool_everything<ares_down<128,
-                                                                       ares_down<64,
-                                                                       ares_down<32,
-                                                                       ares_down<16,
-                                                                       relu<affine<con<8,5,5,2,2,input_rgb_image>>>>>>>>>>;
+using bestshot_net_type = loss_multiclass_log<fc<2,avg_pool_everything<
+                                              ares_down<32,
+                                              ares_down<16,
+                                              relu<affine<con<8,3,3,2,2,input_rgb_image>>>>>>>>;
 }
 
 namespace cv { namespace ofrt {
