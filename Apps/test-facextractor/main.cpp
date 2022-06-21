@@ -20,7 +20,7 @@ const cv::String _options = "{help h               |                        | th
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
-                            "{confthresh           | 0.75                   | confidence threshold for the face detector                    }"
+                            "{confthresh           | 0.5                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 60.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 200                    | target image width                                            }"
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     cv::Mat frame;
     unsigned long framenum = 0;
     while(videocapture.read(frame)) {
-        float t0 = cv::getTickCount();
+        double t0 = cv::getTickCount();
         const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
         const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
@@ -118,9 +118,11 @@ int main(int argc, char *argv[])
                     cv::circle(frame,pt,1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
             }
         }
+
         const std::string info = QString("frame processing time: %1 ms").arg(QString::number(duration_ms,'f',1)).toStdString();
         cv::putText(frame,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
         cv::putText(frame,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
+
         cv::imshow("Probe",frame);
         if(cv::waitKey(1) == 27)
             break;
