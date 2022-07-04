@@ -25,6 +25,8 @@ public:
                              bool rotate,
                              int _interpolationtype);
 
+    std::vector<dlib::matrix<dlib::rgb_pixel>> make_crops(const cv::Mat &mat);
+
     virtual std::vector<float> classify(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) = 0;
 
     virtual float confidence(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) = 0;

@@ -37,5 +37,4 @@ Ptr<FaceClassifier> FaceBestshot::createClassifier(const std::string &modelfilen
     return makePtr<FaceBestshot>(modelfilename);
 }
 
-
 }}

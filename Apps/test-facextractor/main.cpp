@@ -12,6 +12,7 @@
 #include "facemarkcnn.h"
 #include "facemarklitecnn.h"
 #include "facebestshot.h"
+#include "faceblur.h"
 
 #include "facextractionutils.h"
 
@@ -28,8 +29,8 @@ const cv::String _options = "{help h               |                        | th
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
-                            "{bestshotmodel        | facebestshot_net.dat   | face bestshot detector model                                  }"
-                            "{bestshotconf         | 0.99                   | min face bestshot confidence                                  }";
+                            "{blurmodel            | blur_net_lite.dat      | face blureness detector                                       }"
+                            "{maxblur              | 0.5                    | max blur allowed                                              }";
 
 int main(int argc, char *argv[])
 {
@@ -59,14 +60,14 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkLiteCNN();
     facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
 
-    cv::Ptr<cv::ofrt::FaceClassifier> bestshotdetector = cv::ofrt::FaceBestshot::createClassifier(_cmdparser.get<std::string>("bestshotmodel"));
+    cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
     const float h2wshift = _cmdparser.get<float>("h2wshift");
     const float v2hshift = _cmdparser.get<float>("v2hshift");
     const bool rotate = _cmdparser.get<bool>("rotate");
-    const float bsconf = _cmdparser.get<float>("bestshotconf");
+    const float max_blur = _cmdparser.get<float>("maxblur");
 
     cv::VideoCapture videocapture;
     if(_cmdparser.has("videofile")) {
@@ -96,20 +97,20 @@ int main(int argc, char *argv[])
     cv::Mat frame;
     unsigned long framenum = 0;
     while(videocapture.read(frame)) {
-        float t0 = cv::getTickCount();
+        double t0 = cv::getTickCount();
         const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
         const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
-        float duration_ms = 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
+        double duration_ms = 1000.0 * (cv::getTickCount() - t0) / cv::getTickFrequency();
         if(_faces.size() != 0) {
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
                 t0 = cv::getTickCount();
-                float prob_fine = bestshotdetector->confidence(frame,_faces[j]);
+                float blureness = blurenessdetector->confidence(frame,_faces[j]);
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
-                if(prob_fine > bsconf) {
+                if(blureness < max_blur) {
                     cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
-                    const std::string info = QString("bestshot conf: %1").arg(QString::number(prob_fine,'f',2)).toStdString();
+                    const std::string info = QString("bestshot conf: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
                     cv::imshow(std::string("bestshot_") + std::to_string(j), _facepatch);

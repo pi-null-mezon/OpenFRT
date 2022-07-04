@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 
 SOURCES += main.cpp \
     ../../Src/faceclassifier/facebestshot.cpp \
+    ../../Src/faceclassifier/faceblur.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
@@ -25,6 +26,7 @@ unix: {
 }
 
 HEADERS += \
+    ../../Src/faceclassifier/faceblur.h \
     facextractionutils.h
 
 #DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=150

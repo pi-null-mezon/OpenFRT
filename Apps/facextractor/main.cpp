@@ -12,6 +12,9 @@
 
 #include "facextractionutils.h"
 
+#include "dlibimgaugment.h"
+#include "opencvimgaugment.h"
+
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{inputdir i           |                        | input directory with images                                   }"
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
@@ -80,6 +83,8 @@ int main(int argc, char *argv[])
     const bool rotate = _cmdparser.get<bool>("rotate");
     const QString extension = _cmdparser.get<std::string>("codec").c_str();
 
+    cv::RNG cvrng(7);
+
     if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
         const cv::String filename = _cmdparser.get<cv::String>("videofile");
@@ -129,7 +134,40 @@ int main(int argc, char *argv[])
             }
             for(int i = 0; i < _fileslist.size(); ++i) {
                 _totalfiles++;
-                cv::Mat _imgmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
+                cv::Mat _tmpmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
+
+                /*float resize = cvrng.uniform(0.175f,0.5f);
+
+                //_tmpmat = distortimage(_tmpmat,cvrng,0.25f);
+
+                cv::resize(_tmpmat,_tmpmat,cv::Size(),resize,resize);
+                _tmpmat = jitterimage(_tmpmat,cvrng,cv::Size(0,0),0.05,0.05,15,cv::BORDER_REFLECT,cv::Scalar(0),false);
+                _tmpmat *= cvrng.uniform(0.1f,2.0f);
+                if(cvrng.uniform(0.0f,1.0f) < 0.5f) {
+                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,7));
+                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,7));
+                }
+                _tmpmat = addNoise(_tmpmat,cvrng,0,cvrng.uniform(4,32));
+
+                _tmpmat = posterize(_tmpmat, cvrng.uniform(3,32));
+
+                std::vector<unsigned char> _bytes;
+                std::vector<int> compression_params;
+                compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+                compression_params.push_back(cvrng.uniform(5,35));
+                cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+                */
+
+
+                std::vector<unsigned char> _bytes;
+                std::vector<int> compression_params;
+                compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+                compression_params.push_back(55);
+                cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+
+                cv::Mat _imgmat = _tmpmat;
                 if(!_imgmat.empty()) {
                     const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(_imgmat,facedetector,facelandmarker);
                     /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yundet = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
