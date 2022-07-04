@@ -6,6 +6,7 @@ SOURCES += main.cpp \
     ../../Src/faceclassifier/facebestshot.cpp \
     ../../Src/faceclassifier/faceblur.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
+    ../../Src/faceclassifier/headposepredictor.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
@@ -27,6 +28,7 @@ unix: {
 
 HEADERS += \
     ../../Src/faceclassifier/faceblur.h \
+    ../../Src/faceclassifier/headposepredictor.h \
     facextractionutils.h
 
 #DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=150
