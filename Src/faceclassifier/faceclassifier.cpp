@@ -76,7 +76,14 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     return _patch;
 }
 
-std::vector<dlib::matrix<dlib::rgb_pixel> > FaceClassifier::make_crops(const Mat &mat)
+cv::Rect FaceClassifier::scale_rect(const cv::Rect &rect, float scale) {
+    return cv::Rect(rect.x - rect.width * (scale - 1.0f) / 2.0f,
+                    rect.y - rect.height * (scale - 1.0f) / 2.0f,
+                    rect.width * scale,
+                    rect.height * scale);
+}
+
+std::vector<dlib::matrix<dlib::rgb_pixel>> FaceClassifier::make_crops(const Mat &mat)
 {
     dlib::matrix<dlib::rgb_pixel> dlibfacepatch = cvmat2dlibmatrix(mat);
     std::vector<dlib::matrix<dlib::rgb_pixel>> crops;
