@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
                                                                    fast);
                     angles = headposepredictor->process(frame,_faces[j],fast);
                     separate_thread->join();
+                    delete separate_thread;
                 } else {
                     blureness = blurenessdetector->process(frame,_faces[j],fast)[0];
                     angles = headposepredictor->process(frame,_faces[j],fast);
