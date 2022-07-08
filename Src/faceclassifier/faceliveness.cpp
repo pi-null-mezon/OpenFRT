@@ -16,6 +16,17 @@ FaceLiveness::FaceLiveness(const std::string &modelfilename):
     }
 }
 
+std::vector<float> FaceLiveness::process(const Mat &img, const std::vector<Point2f> &landmarks, bool fast)
+{
+    cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true,cv::INTER_LINEAR);
+    cv::resize(cv_facepatch,cv_facepatch,cv::Size(80,80),0,0,cv::INTER_AREA);
+    std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(cv_facepatch));
+    if(!fast)
+        crops.emplace_back(dlib::fliplr(crops[0]));
+    dlib::matrix<float,1,4> p = dlib::sum_rows(dlib::mat(snet(crops.begin(),crops.end()))) / crops.size();
+    return std::vector<float>(1,p(0));
+}
+
 Ptr<FaceClassifier> FaceLiveness::createClassifier(const std::string &modelfilename)
 {
     return makePtr<FaceLiveness>(modelfilename);

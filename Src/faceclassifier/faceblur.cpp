@@ -19,7 +19,7 @@ std::vector<float> FaceBlur::process(const cv::Mat &img, const std::vector<cv::P
     cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true,cv::INTER_LINEAR);
     std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(cv_facepatch));
     if(!fast)
-        crops.push_back(dlib::fliplr(crops[0]));
+        crops.emplace_back(dlib::fliplr(crops[0]));
     dlib::matrix<float,1,1> p = dlib::sum_rows(dlib::mat(net(crops))) / crops.size();
     std::vector<float> blureness(dlib::num_columns(p),0);
     for(size_t i = 0; i < blureness.size(); ++i)

@@ -16,6 +16,7 @@
 #include "facebestshot.h"
 #include "faceblur.h"
 #include "headposepredictor.h"
+#include "faceliveness.h"
 
 
 #include "facextractionutils.h"
@@ -36,9 +37,10 @@ const cv::String _options = "{help h               |                        | th
                             "{headposemodel        | headpose_net_lite.dat  | head pose predictor                                           }"
                             "{maxangle             | 90.0                   | max angle allowed (any of pitch, yaw, roll)                   }"
                             "{blurmodel            | blur_net_lite.dat      | face blureness detector                                       }"
-                            "{maxblur              | 0.999                  | max blur allowed                                              }"
+                            "{maxblur              | 1.0                    | max blur allowed                                              }"
                             "{fast                 | true                   | make single inference for each detector and classifier        }"
-                            "{multythreaded        | true                   | process tasks in parallel threads when possible               }";
+                            "{multythreaded        | false                  | process tasks in parallel threads when possible               }"
+                            "{livenessmodel        | liveness_net_lite.dat  | face liveness detector                                        }";
 
 auto calculate_blureness = [](float &output, cv::Ptr<cv::ofrt::FaceClassifier> classifier,const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) {
     output = classifier->process(img,landmarks,fast)[0];
@@ -85,6 +87,7 @@ int main(int argc, char *argv[])
 
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
+    cv::Ptr<cv::ofrt::FaceClassifier> livenessdetector = cv::ofrt::FaceLiveness::createClassifier(_cmdparser.get<std::string>("livenessmodel"));
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
@@ -136,6 +139,7 @@ int main(int argc, char *argv[])
 
                 float blureness = 0.0f;
                 std::vector<float> angles(3,0.0f);
+                float liveness_score = 0.0f;
 
                 if(multythreaded) {
                     std::thread *separate_thread = new std::thread(calculate_blureness,
@@ -145,11 +149,13 @@ int main(int argc, char *argv[])
                                                                    std::cref(_faces[j]),
                                                                    fast);
                     angles = headposepredictor->process(frame,_faces[j],fast);
+                    liveness_score = livenessdetector->process(frame,_faces[j],fast)[0];
                     separate_thread->join();
                     delete separate_thread;
                 } else {
                     blureness = blurenessdetector->process(frame,_faces[j],fast)[0];
                     angles = headposepredictor->process(frame,_faces[j],fast);
+                    liveness_score = livenessdetector->process(frame,_faces[j],fast)[0];
                 }
 
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
@@ -161,7 +167,7 @@ int main(int argc, char *argv[])
                     cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
-                    cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,blureness < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
                     info = QString("yaw:   %1").arg(QString::number(angles[0],'f',0)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,40), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
@@ -172,6 +178,10 @@ int main(int argc, char *argv[])
                     info = QString("roll:  %1").arg(QString::number(angles[2],'f',0)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,80), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,79), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
+
+                    info = QString("liveness:  %1").arg(QString::number(liveness_score,'f',2)).toStdString();
+                    cv::putText(_facepatch,info,cv::Point(20,100), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,99), cv::FONT_HERSHEY_SIMPLEX,0.5,liveness_score > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
                     cv::imshow(std::string("bestshot_") + std::to_string(j), _facepatch);
                 }

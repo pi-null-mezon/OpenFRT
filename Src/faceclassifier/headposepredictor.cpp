@@ -33,7 +33,7 @@ std::vector<float> HeadPosePredictor::process(const Mat &img, const std::vector<
     cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),false,cv::INTER_LINEAR);
     std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(cv_facepatch));
     if(!fast)
-        crops.push_back(dlib::fliplr(crops[0]));
+        crops.emplace_back(dlib::fliplr(crops[0]));
     std::vector<dlib::matrix<float>> p = net(crops);
     std::vector<float> angles(3,0);
     if(crops.size() == 2) {
