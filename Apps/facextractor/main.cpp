@@ -21,7 +21,7 @@ const cv::String _options = "{help h               |                        | th
                             "{outputdir o          |                        | output directory with images                                  }"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
-                            "{confthresh           | 0.8                    | confidence threshold for the face detector                    }"
+                            "{confthresh           | 0.5                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 30.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 150                    | target image width                                            }"
@@ -136,36 +136,30 @@ int main(int argc, char *argv[])
                 _totalfiles++;
                 cv::Mat _tmpmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
 
-                /*float resize = cvrng.uniform(0.175f,0.5f);
-
-                //_tmpmat = distortimage(_tmpmat,cvrng,0.25f);
-
+                /*float resize = cvrng.uniform(0.15f,0.6f);
                 cv::resize(_tmpmat,_tmpmat,cv::Size(),resize,resize);
                 _tmpmat = jitterimage(_tmpmat,cvrng,cv::Size(0,0),0.05,0.05,15,cv::BORDER_REFLECT,cv::Scalar(0),false);
                 _tmpmat *= cvrng.uniform(0.1f,2.0f);
+
                 if(cvrng.uniform(0.0f,1.0f) < 0.5f) {
-                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,7));
-                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,7));
+                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,3));
+                    _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,3));
                 }
-                _tmpmat = addNoise(_tmpmat,cvrng,0,cvrng.uniform(4,32));
+                if(cvrng.uniform(0.0f,1.0f) < 0.5f)
+                    _tmpmat = addNoise(_tmpmat,cvrng,0,cvrng.uniform(1,16));
+                if(cvrng.uniform(0.0f,1.0f) < 0.5f)
+                    _tmpmat = posterize(_tmpmat, cvrng.uniform(1,32));
 
-                _tmpmat = posterize(_tmpmat, cvrng.uniform(3,32));
-
-                std::vector<unsigned char> _bytes;
-                std::vector<int> compression_params;
-                compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-                compression_params.push_back(cvrng.uniform(5,35));
-                cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
-                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
-                */
-
+                // 0.175 - 45 - 85 %, 0.35 - 90 - 25 %, 0.70 - 180 - 15 %
+                int max_jpeg_quality = (int)(100.0f*(0.08f / resize));
 
                 std::vector<unsigned char> _bytes;
                 std::vector<int> compression_params;
                 compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-                compression_params.push_back(55);
+                compression_params.push_back(cvrng.uniform(5,max_jpeg_quality));
                 cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
-                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);*/
+
 
                 cv::Mat _imgmat = _tmpmat;
                 if(!_imgmat.empty()) {

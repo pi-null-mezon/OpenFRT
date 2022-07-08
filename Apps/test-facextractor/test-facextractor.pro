@@ -5,6 +5,7 @@ CONFIG -= app_bundle
 SOURCES += main.cpp \
     ../../Src/faceclassifier/facebestshot.cpp \
     ../../Src/faceclassifier/faceblur.cpp \
+    ../../Src/faceclassifier/faceliveness.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/faceclassifier/headposepredictor.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
@@ -28,6 +29,7 @@ unix: {
 
 HEADERS += \
     ../../Src/faceclassifier/faceblur.h \
+    ../../Src/faceclassifier/faceliveness.h \
     ../../Src/faceclassifier/headposepredictor.h \
     facextractionutils.h
 
