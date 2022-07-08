@@ -31,13 +31,13 @@ class HeadPosePredictor : public FaceClassifier
 public:
     HeadPosePredictor(const std::string &modelfilename);
 
-    std::vector<float> classify(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) override;
-
-    float confidence(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) override;
+    std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) override;
 
     static Ptr<FaceClassifier> createClassifier(const std::string &modelfilename="./headpose_net_lite.dat");
 
 private:
+    cv::Mat crop(const Mat &img, const std::vector<Point2f> &landmarks, const cv::Size targetsize);
+
     dlib::headpose_type net;
 };
 

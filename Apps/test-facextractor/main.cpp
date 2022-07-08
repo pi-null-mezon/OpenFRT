@@ -2,6 +2,8 @@
 #include <QUuid>
 #include <QDir>
 
+#include <thread>
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio.hpp>
@@ -26,14 +28,32 @@ const cv::String _options = "{help h               |                        | th
                             "{confthresh           | 0.5                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 60.0                   | target distance between eyes                                  }"
-                            "{targetwidth          | 200                    | target image width                                            }"
+                            "{targetwidth          | 250                    | target image width                                            }"
                             "{targetheight         | 300                    | target image height                                           }"
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
                             "{headposemodel        | headpose_net_lite.dat  | head pose predictor                                           }"
+                            "{maxangle             | 90.0                   | max angle allowed (any of pitch, yaw, roll)                   }"
                             "{blurmodel            | blur_net_lite.dat      | face blureness detector                                       }"
-                            "{maxblur              | 0.99                   | max blur allowed                                              }";
+                            "{maxblur              | 0.999                  | max blur allowed                                              }"
+                            "{fast                 | true                   | make single inference for each detector and classifier        }"
+                            "{multythreaded        | true                   | process tasks in parallel threads when possible               }";
+
+auto calculate_blureness = [](float &output, cv::Ptr<cv::ofrt::FaceClassifier> classifier,const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) {
+    output = classifier->process(img,landmarks,fast)[0];
+};
+
+std::vector<float> frame_times(30,0.0f);
+size_t frame_times_pos = 0;
+
+float average(const std::vector<float> &values) {
+    if(values.size() == 0)
+        return 0.0f;
+    if(values.size() == 1)
+        return values[0];
+    return std::accumulate(values.begin(), values.end(), 0.0f) / values.size();
+}
 
 int main(int argc, char *argv[])
 {
@@ -72,6 +92,9 @@ int main(int argc, char *argv[])
     const float v2hshift = _cmdparser.get<float>("v2hshift");
     const bool rotate = _cmdparser.get<bool>("rotate");
     const float max_blur = _cmdparser.get<float>("maxblur");
+    const float max_angle = _cmdparser.get<float>("maxangle");
+    const bool fast = _cmdparser.get<bool>("fast");
+    const bool multythreaded = _cmdparser.get<bool>("multythreaded");
 
     cv::VideoCapture videocapture;
     if(_cmdparser.has("videofile")) {
@@ -110,11 +133,31 @@ int main(int argc, char *argv[])
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
                 t0 = cv::getTickCount();
-                float blureness = blurenessdetector->confidence(frame,_faces[j]);
-                std::vector<float> angles = headposepredictor->classify(frame,_faces[j]);
+
+                float blureness = 0.0f;
+                std::vector<float> angles(3,0.0f);
+
+                if(multythreaded) {
+                    std::thread *separate_thread = new std::thread(calculate_blureness,
+                                                                   std::ref(blureness),
+                                                                   blurenessdetector,
+                                                                   std::cref(frame),
+                                                                   std::cref(_faces[j]),
+                                                                   fast);
+                    angles = headposepredictor->process(frame,_faces[j],fast);
+                    separate_thread->join();
+                    delete separate_thread;
+                } else {
+                    blureness = blurenessdetector->process(frame,_faces[j],fast)[0];
+                    angles = headposepredictor->process(frame,_faces[j],fast);
+                }
 
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
-                if(blureness < max_blur) {
+                frame_times[frame_times_pos++] = duration_ms;
+                if (frame_times_pos == frame_times.size())
+                    frame_times_pos = 0;
+                if((blureness < max_blur) &&
+                    (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
@@ -137,7 +180,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        const std::string info = QString("frame processing time: %1 ms").arg(QString::number(duration_ms,'f',1)).toStdString();
+        const std::string info = QString("frame processing time: %1 ms").arg(QString::number(average(frame_times),'f',1)).toStdString();
         cv::putText(frame,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
         cv::putText(frame,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
 

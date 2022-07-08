@@ -25,11 +25,11 @@ public:
                              bool rotate,
                              int _interpolationtype);
 
+    cv::Rect scale_rect(const cv::Rect &rect, float scale);
+
     std::vector<dlib::matrix<dlib::rgb_pixel>> make_crops(const cv::Mat &mat);
 
-    virtual std::vector<float> classify(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) = 0;
-
-    virtual float confidence(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks) = 0;
+    virtual std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) = 0;
 
     const cv::Size size() const;
 
