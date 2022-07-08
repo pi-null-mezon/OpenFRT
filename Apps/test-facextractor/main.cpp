@@ -17,6 +17,7 @@
 #include "faceblur.h"
 #include "headposepredictor.h"
 #include "faceliveness.h"
+#include "faceliveness.h"
 
 
 #include "facextractionutils.h"
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
     if(_cmdparser.has("videofile")) {
         std::string filename = _cmdparser.get<std::string>("videofile");
         if(videocapture.open(filename)) {
-            qInfo("Video file has been opened successfully");          
+            qInfo("Video file has been opened successfully");
         } else {
             qInfo("Can not open ! Abort...");
             return 5;
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
             videocapture.set(cv::CAP_PROP_FRAME_WIDTH,640);
             videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,480);
             videocapture.set(cv::CAP_PROP_FPS,30);
-            qInfo("Video device %d has been opened successfully", device);         
+            qInfo("Video device %d has been opened successfully", device);
         } else {
             qInfo("Can not open device %d! Abort...", device);
             return 5;
@@ -162,8 +163,7 @@ int main(int argc, char *argv[])
                 frame_times[frame_times_pos++] = duration_ms;
                 if (frame_times_pos == frame_times.size())
                     frame_times_pos = 0;
-                if((blureness < max_blur) &&
-                    (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
+                if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
