@@ -5,7 +5,7 @@
 namespace cv { namespace ofrt {
 
 FaceLiveness::FaceLiveness(const std::string &modelfilename):
-    FaceClassifier(cv::Size(300,300),75.0f,0.0f)
+    FaceClassifier(cv::Size(80,80),20.0f,0.0f)
 {
     try {
         dlib::liveness_type net;
@@ -19,7 +19,6 @@ FaceLiveness::FaceLiveness(const std::string &modelfilename):
 std::vector<float> FaceLiveness::process(const Mat &img, const std::vector<Point2f> &landmarks, bool fast)
 {
     cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true,cv::INTER_LINEAR);
-    cv::resize(cv_facepatch,cv_facepatch,cv::Size(80,80),0,0,cv::INTER_AREA);
     std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(cv_facepatch));
     if(!fast)
         crops.emplace_back(dlib::fliplr(crops[0]));

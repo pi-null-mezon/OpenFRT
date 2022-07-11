@@ -3,6 +3,8 @@
 #include <QDir>
 
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -24,6 +26,9 @@
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{device               | 0                      | video device                                                  }"
+                            "{frame_width          | 640                    | self explained                                                }"
+                            "{frame_height         | 480                    | self explained                                                }"
+                            "{frame_rate           | 30                     | self explained                                                }"
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
@@ -40,14 +45,10 @@ const cv::String _options = "{help h               |                        | th
                             "{blurmodel            | blur_net_lite.dat      | face blureness detector                                       }"
                             "{maxblur              | 1.0                    | max blur allowed                                              }"
                             "{fast                 | true                   | make single inference for each detector and classifier        }"
-                            "{multythreaded        | false                  | process tasks in parallel threads when possible               }"
+                            "{multithreaded        | true                   | process tasks in parallel threads when possible               }"
                             "{livenessmodel        | liveness_net_lite.dat  | face liveness detector                                        }";
 
-auto calculate_blureness = [](float &output, cv::Ptr<cv::ofrt::FaceClassifier> classifier,const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) {
-    output = classifier->process(img,landmarks,fast)[0];
-};
-
-std::vector<float> frame_times(30,0.0f);
+std::vector<float> frame_times(15,0.0f);
 size_t frame_times_pos = 0;
 
 float average(const std::vector<float> &values) {
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> livenessdetector = cv::ofrt::FaceLiveness::createClassifier(_cmdparser.get<std::string>("livenessmodel"));
 
+    qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
     const float h2wshift = _cmdparser.get<float>("h2wshift");
@@ -98,7 +100,9 @@ int main(int argc, char *argv[])
     const float max_blur = _cmdparser.get<float>("maxblur");
     const float max_angle = _cmdparser.get<float>("maxangle");
     const bool fast = _cmdparser.get<bool>("fast");
-    const bool multythreaded = _cmdparser.get<bool>("multythreaded");
+    qInfo(" - fast inference - %s", fast ? "yes" : "no");
+    const bool multithreaded = _cmdparser.get<bool>("multithreaded");
+    qInfo(" - multithreaded - %s", multithreaded ? "yes" : "no");
 
     cv::VideoCapture videocapture;
     if(_cmdparser.has("videofile")) {
@@ -112,9 +116,9 @@ int main(int argc, char *argv[])
     } else if(_cmdparser.has("device")) {
         int device = _cmdparser.get<int>("device");
         if(videocapture.open(device)) {
-            videocapture.set(cv::CAP_PROP_FRAME_WIDTH,640);
-            videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,480);
-            videocapture.set(cv::CAP_PROP_FPS,30);
+            videocapture.set(cv::CAP_PROP_FRAME_WIDTH,_cmdparser.get<int>("frame_width"));
+            videocapture.set(cv::CAP_PROP_FRAME_HEIGHT,_cmdparser.get<int>("frame_height"));
+            videocapture.set(cv::CAP_PROP_FPS,_cmdparser.get<int>("frame_rate"));
             qInfo("Video device %d has been opened successfully", device);
         } else {
             qInfo("Can not open device %d! Abort...", device);
@@ -127,6 +131,45 @@ int main(int argc, char *argv[])
 
     cv::Mat frame;
     unsigned long framenum = 0;
+
+    bool finish = false;
+    std::mutex mtx;
+    std::condition_variable cnd;
+    std::vector<cv::Point2f> landmarks;
+    bool blureness_ready;
+    float blureness = 0.0f;
+    bool liveness_ready;
+    float liveness_score = 0.0f;
+    std::vector<float> angles;
+
+    std::thread *blureness_thread = nullptr;
+    std::thread *liveness_thread = nullptr;
+    if(multithreaded) {
+        blureness_thread = new std::thread([&](){
+            while(true) {
+                std::unique_lock<std::mutex> lck(mtx);
+                cnd.wait(lck, [&](){return ((!blureness_ready && landmarks.size() != 0) || finish);});
+                if(finish)
+                    break;
+                blureness = blurenessdetector->process(frame,landmarks,fast)[0];
+                blureness_ready = true;
+                cnd.notify_all();
+            }
+        });
+        liveness_thread = new std::thread([&](){
+            while(true) {
+                std::unique_lock<std::mutex> lck(mtx);
+                cnd.wait(lck, [&](){return ((!liveness_ready && landmarks.size() != 0) || finish);});
+                if(finish)
+                    break;
+                liveness_score = livenessdetector->process(frame,landmarks,fast)[0];
+                liveness_ready = true;
+                cnd.notify_all();
+            }
+        });
+    }
+
+    size_t faces_found_erlier = 0;
     while(videocapture.read(frame)) {
         double t0 = cv::getTickCount();
         const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
@@ -137,28 +180,26 @@ int main(int argc, char *argv[])
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
                 t0 = cv::getTickCount();
-
-                float blureness = 0.0f;
-                std::vector<float> angles(3,0.0f);
-                float liveness_score = 0.0f;
-
-                if(multythreaded) {
-                    std::thread *separate_thread = new std::thread(calculate_blureness,
-                                                                   std::ref(blureness),
-                                                                   blurenessdetector,
-                                                                   std::cref(frame),
-                                                                   std::cref(_faces[j]),
-                                                                   fast);
-                    angles = headposepredictor->process(frame,_faces[j],fast);
-                    liveness_score = livenessdetector->process(frame,_faces[j],fast)[0];
-                    separate_thread->join();
-                    delete separate_thread;
+                if(multithreaded) {
+                    {
+                        std::lock_guard<std::mutex> lck(mtx);
+                        blureness_ready = false;
+                        liveness_ready = false;
+                        landmarks = _faces[j];
+                        cnd.notify_all();
+                    }
+                    angles = headposepredictor->process(frame,landmarks,fast);
+                    {
+                        std::unique_lock<std::mutex> lck(mtx);
+                        cnd.wait(lck,[&](){return (blureness_ready);});
+                        cnd.wait(lck,[&](){return (liveness_ready);});
+                    }
                 } else {
-                    blureness = blurenessdetector->process(frame,_faces[j],fast)[0];
-                    angles = headposepredictor->process(frame,_faces[j],fast);
-                    liveness_score = livenessdetector->process(frame,_faces[j],fast)[0];
+                    landmarks = _faces[j];
+                    blureness = blurenessdetector->process(frame,landmarks,fast)[0];
+                    liveness_score = livenessdetector->process(frame,landmarks,fast)[0];
+                    angles = headposepredictor->process(frame,landmarks,fast);
                 }
-
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 frame_times[frame_times_pos++] = duration_ms;
                 if (frame_times_pos == frame_times.size())
@@ -194,12 +235,30 @@ int main(int argc, char *argv[])
         cv::putText(frame,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
         cv::putText(frame,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,255,255),1,cv::LINE_AA);
 
+        if(_faces.size() < faces_found_erlier){
+            for(size_t j = _faces.size(); j < faces_found_erlier; ++j)
+                cv::destroyWindow(std::string("bestshot_") + std::to_string(j));
+        }
+        faces_found_erlier = _faces.size();
+
         cv::imshow("Probe",frame);
-        if(cv::waitKey(1) == 27)
+        if(cv::waitKey(1) == 27) {
+            {
+                std::lock_guard<std::mutex> lck(mtx);
+                finish = true;
+                cnd.notify_all();
+            }
             break;
+        }
         framenum++;
     }
 
+    if(multithreaded) {
+        blureness_thread->join();
+        liveness_thread->join();
+        delete blureness_thread;
+        delete liveness_thread;
+    }
     return 0;
 }
 

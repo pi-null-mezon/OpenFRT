@@ -66,10 +66,10 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
     float _scale = _targeteyesdistance / _eyesdistance;
     float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
-    cv::Point2f _cp = (_rc + _lc)/2.0f;
+    cv::Point2f _cp = (_rc + _lc) / 2.0f;
     cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
-    _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x + h2wshift * _targetsize.width;
-    _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y + v2hshift * _targetsize.height;
+    _tm.at<double>(0,2) += _targetsize.width / 2.0 - _cp.x + h2wshift * _targetsize.width;
+    _tm.at<double>(1,2) += _targetsize.height / 2.0 - _cp.y + v2hshift * _targetsize.height;
 
     cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);
 
