@@ -5,7 +5,7 @@
 namespace cv { namespace ofrt {
 
 FaceBlur::FaceBlur(const std::string &modelfilename) :
-    FaceClassifier(cv::Size(150,150),60.0f,-0.2f)
+    FaceClassifier(cv::Size(100,100),40.0f,-0.2f)
 {
     try {
         dlib::deserialize(modelfilename) >> net;

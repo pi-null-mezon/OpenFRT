@@ -17,7 +17,7 @@ using block  = BN<con<N,3,3,1,1,relu<BN<con<N,3,3,stride,stride,SUBNET>>>>>;
 template <int N, typename SUBNET> using ares      = relu<residual<block,N,affine,SUBNET>>;
 template <int N, typename SUBNET> using ares_down = relu<residual_down<block,N,affine,SUBNET>>;
 
-using liveness_type = loss_multiclass_log<fc<4,avg_pool_everything<ares_down<32,ares_down<16,ares<16,relu<affine<con<8,3,3,2,2,input_rgb_image>>>>>>>>>;
+using liveness_type = loss_multiclass_log<fc<4,avg_pool_everything<ares_down<32,ares_down<16,ares<8,relu<affine<con<4,3,3,2,2,input_rgb_image>>>>>>>>>;
 
 }
 
@@ -31,7 +31,7 @@ public:
 
     std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) override;
 
-    static Ptr<FaceClassifier> createClassifier(const std::string &modelfilename="./liveness_net_lite.dat");
+    static Ptr<FaceClassifier> createClassifier(const std::string &modelfilename="./liveness_net_super_lite.dat");
 
 private:
     dlib::softmax<dlib::liveness_type::subnet_type> snet;
