@@ -2,7 +2,7 @@
 
 #include <opencv2/imgproc.hpp>
 
-dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat)
+static dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat)
 {
     cv::Mat _mat = _cvmat;
     if(_cvmat.isContinuous() == false)

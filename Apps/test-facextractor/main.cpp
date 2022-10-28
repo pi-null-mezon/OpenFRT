@@ -19,8 +19,6 @@
 #include "faceblur.h"
 #include "headposepredictor.h"
 #include "faceliveness.h"
-#include "faceliveness.h"
-
 
 #include "facextractionutils.h"
 
@@ -46,7 +44,7 @@ const cv::String _options = "{help h               |                        | th
                             "{maxblur              | 1.0                    | max blur allowed                                              }"
                             "{fast                 | true                   | make single inference for each detector and classifier        }"
                             "{multithreaded        | true                   | process tasks in parallel threads when possible               }"
-                            "{livenessmodel        | liveness_net_lite.dat  | face liveness detector                                        }";
+                            "{livenessmodel        | liveness_net_lite_v2.dat  | face liveness detector                                        }";
 
 std::vector<float> frame_times(15,0.0f);
 size_t frame_times_pos = 0;
@@ -79,13 +77,15 @@ int main(int argc, char *argv[])
         qWarning("You have not specified face detector description filename! Abort...");
         return 4;
     }
-    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector1 = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));*/
     cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
     cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkLiteCNN();
     facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
+
+    cv::Ptr<cv::face::Facemark> facelandmarker1 = cv::face::createFacemarkCNN();
 
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
