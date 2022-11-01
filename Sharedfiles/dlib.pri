@@ -13,12 +13,22 @@ win32 {
     } else {
         DLIB_ARCHITECTURE = x86
     }
+    DLIB_ARCHITECTURE = x86
 
-    DLIB_INSTALL_PATH = C:/Programming/3rdParties/Dlib/build_$${DLIB_COMPILER}$${DLIB_ARCHITECTURE}
+    DLIB_INSTALL_PATH = C:/Programming/3rdParties/Dlib/install/$${DLIB_COMPILER}/$${DLIB_ARCHITECTURE}
+    message($${DLIB_INSTALL_PATH})
 
     INCLUDEPATH += $${DLIB_INSTALL_PATH}/include
 
     LIBS += -L$${DLIB_INSTALL_PATH}/lib
+
+    openblasbackend {
+        message(OpenBLAS backend selected)
+        OPENBLAS_INSTALL_PATH = "C:/Program Files (x86)/OpenBLAS"
+
+        LIBS += -L$${OPENBLAS_INSTALL_PATH}/bin \
+                -lopenblas
+    }
 }
 
 LIBS += -ldlib

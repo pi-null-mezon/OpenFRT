@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console c++14
 CONFIG -= app_bundle
 
 SOURCES += main.cpp \
@@ -33,4 +33,6 @@ HEADERS += \
     ../../Src/faceclassifier/headposepredictor.h \
     facextractionutils.h
 
+
 #DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=150
+

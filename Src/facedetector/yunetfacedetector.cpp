@@ -20,8 +20,8 @@ YuNetFaceDetector::YuNetFaceDetector(const std::string &_modelfilename, float _s
     inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
     inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
 #else
-    inputW = 70;
-    inputH = 70;
+    inputW = 64;
+    inputH = 64;
 #endif
     generatePriors();
 }
