@@ -38,11 +38,9 @@ win32 {
     LIBS += -l$$qtLibraryName(opencv_core$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_highgui$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_imgproc$${OPENCV_VERSION}) \
-            -l$$qtLibraryName(opencv_objdetect$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_videoio$${OPENCV_VERSION}) \
             -l$$qtLibraryName(opencv_imgcodecs$${OPENCV_VERSION}) \
-            -l$$qtLibraryName(opencv_dnn$${OPENCV_VERSION}) \
-            -l$$qtLibraryName(opencv_face$${OPENCV_VERSION})
+            -l$$qtLibraryName(opencv_dnn$${OPENCV_VERSION})
     message(OpenCV library version $${OPENCV_DIR}/$${OPENCV_ARCHITECTURE_DIR}/$${OPENCV_COMPILER_DIR} will be used)
 }
 
@@ -50,7 +48,6 @@ linux {
     INCLUDEPATH += /usr/local/include/opencv4
 
     LIBS += -lopencv_core \
-            -lopencv_objdetect \
             -lopencv_highgui \
             -lopencv_imgproc \
             -lopencv_videoio \

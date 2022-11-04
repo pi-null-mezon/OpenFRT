@@ -62,6 +62,8 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
     setlocale(LC_CTYPE, "Rus");
 #endif
+    dlib::set_dnn_prefer_fastest_algorithms();
+
     cv::CommandLineParser _cmdparser(argc,argv,_options);
     _cmdparser.about("Utility to test face detection and alignment speed");
     if(_cmdparser.has("help") || argc == 1) {
@@ -82,10 +84,7 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));*/
     cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
-    cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkLiteCNN();
-    facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
-
-    cv::Ptr<cv::face::Facemark> facelandmarker1 = cv::face::createFacemarkCNN();
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
 
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
@@ -100,9 +99,9 @@ int main(int argc, char *argv[])
     const float max_blur = _cmdparser.get<float>("maxblur");
     const float max_angle = _cmdparser.get<float>("maxangle");
     const bool fast = _cmdparser.get<bool>("fast");
-    qInfo(" - fast inference - %s", fast ? "yes" : "no");
+    qInfo(" - fast prediction - %s", fast ? "ON" : "OFF");
     const bool multithreaded = _cmdparser.get<bool>("multithreaded");
-    qInfo(" - multithreaded - %s", multithreaded ? "yes" : "no");
+    qInfo(" - multithreaded - %s", multithreaded ? "ON" : "OFF");
 
     cv::VideoCapture videocapture;
     if(_cmdparser.has("videofile")) {

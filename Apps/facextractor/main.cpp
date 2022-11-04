@@ -12,8 +12,8 @@
 
 #include "facextractionutils.h"
 
-#include "dlibimgaugment.h"
-#include "opencvimgaugment.h"
+//#include "dlibimgaugment.h"
+//#include "opencvimgaugment.h"
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{inputdir i           |                        | input directory with images                                   }"
@@ -70,8 +70,7 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                                _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::face::Facemark> facelandmarker = cv::face::createFacemarkCNN();
-    facelandmarker->loadModel(_cmdparser.get<std::string>("facelandmarksmodel"));
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create("facelandmarksmodel");
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");

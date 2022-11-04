@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console c++14
 CONFIG -= app_bundle
 
 SOURCES += main.cpp \
@@ -7,6 +7,7 @@ SOURCES += main.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
+    ../../Src/facelandmarks/facemark.cpp \
     facextractionutils.cpp
 
 INCLUDEPATH += ../../Src/facedetector \

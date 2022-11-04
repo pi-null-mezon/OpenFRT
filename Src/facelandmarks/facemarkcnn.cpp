@@ -15,9 +15,9 @@ static dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat)
 }
 
 
-cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect &roiRect)
+static cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect2f &roiRect)
 {
-    roiRect = cv::Rect(0,0,0,0);
+    roiRect = cv::Rect2f(0,0,0,0);
     if(static_cast<float>(input.cols)/input.rows > static_cast<float>(size.width)/size.height) {
         roiRect.height = static_cast<float>(input.rows);
         roiRect.width = input.rows * static_cast<float>(size.width)/size.height;
@@ -27,7 +27,7 @@ cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size
         roiRect.height = input.cols * static_cast<float>(size.height)/size.width;
         roiRect.y = (input.rows - roiRect.height)/2.0f;
     }
-    roiRect &= cv::Rect(0, 0, input.cols, input.rows);
+    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(input.cols), static_cast<float>(input.rows));
     cv::Mat output;
     if(roiRect.area() > 0)  {
         cv::Mat croppedImg(input, roiRect);
@@ -39,15 +39,11 @@ cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size
     return output;
 }
 
+namespace cv { namespace ofrt {
 
-namespace cv { namespace face {
-
-FacemarkCNN::FacemarkCNN() : Facemark(), isize(cv::Size(100,100))
-{
-
-}
-
-void FacemarkCNN::loadModel(String model)
+FacemarkCNN::FacemarkCNN(const String &model) :
+    Facemark(),
+    isize(cv::Size(100,100))
 {
     try {
         dlib::deserialize(model.c_str()) >> net;
@@ -56,41 +52,28 @@ void FacemarkCNN::loadModel(String model)
     }
 }
 
-bool FacemarkCNN::fit(InputArray image, InputArray faces, OutputArrayOfArrays landmarks)
+bool FacemarkCNN::fit(const cv::Mat &image, const std::vector<Rect> &faces, std::vector<std::vector<Point2f>> &landmarks) const
 {
-    if(image.empty() || (faces.total() < 1))
-        return false;
-
-    const std::vector<cv::Rect> &_faces = *reinterpret_cast<const std::vector<cv::Rect> *>(faces.getObj());
-    std::vector<std::vector<cv::Point2f>> _landmarks;
-    _landmarks.reserve(_faces.size());
-
-    cv::Mat mat = image.getMat();
-    for(const auto &_rect : _faces) {
-        cv::Rect _roirect;
-        dlib::matrix<float> prediction = net(cvmat2dlibmatrix(cropInsideFromCenterAndResize(mat(_rect & cv::Rect(0,0,mat.cols,mat.rows)),isize,_roirect)));
-
+    if(image.empty() || (faces.size() < 1))
+        return false;    
+    landmarks.reserve(faces.size());
+    const cv::Rect frame(0,0,image.cols,image.rows);
+    for(const auto &_rect : faces) {
+        cv::Rect2f _roirect;
+        dlib::matrix<float> prediction = net(cvmat2dlibmatrix(cropInsideFromCenterAndResize(image(_rect & frame),isize,_roirect)));
         std::vector<cv::Point2f> _points;
         _points.reserve(dlib::num_rows(prediction));
         for(long i = 0; i < dlib::num_rows(prediction)/2; ++i)
             _points.push_back(cv::Point2f((0.5f+prediction(2*i)) * _roirect.width + _rect.x + _roirect.x,
                                           (0.5f+prediction(2*i+1)) * _roirect.height + _rect.y + _roirect.y));
-        _landmarks.push_back(std::move(_points));
-    }
-
-    // Let's assign results to output array
-    landmarks.create(static_cast<int>(_landmarks.size()), 1, CV_32FC2);
-    for(size_t i = 0; i < _landmarks.size(); ++i) {
-        landmarks.create(static_cast<int>(_landmarks[0].size()), 1, CV_32FC2, static_cast<int>(i));
-        Mat m = landmarks.getMat(static_cast<int>(i));
-        Mat(Mat(_landmarks[i]).t()).copyTo(m);
+        landmarks.push_back(std::move(_points));
     }
     return true;
 }
 
-Ptr<Facemark> createFacemarkCNN()
+Ptr<Facemark> FacemarkCNN::create(const String &model)
 {
-    return makePtr<FacemarkCNN>();
+    return makePtr<FacemarkCNN>(model);
 }
 
 }}
