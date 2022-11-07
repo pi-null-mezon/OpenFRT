@@ -54,8 +54,6 @@ private:
     cv::Size isize;
 };
 
-Ptr<Facemark> createFacemarkLiteCNN();
-
 }}
 
 #endif // FACEMARKLITECNN_H
