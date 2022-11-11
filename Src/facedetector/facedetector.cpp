@@ -46,5 +46,15 @@ float FaceDetector::getYShift() const
     return yShift;
 }
 
+void FaceDetector::sortByArea(std::vector<Rect> &rects, bool descending)
+{
+    std::sort(rects.begin(),rects.end(),[descending](const Rect &left, const Rect &right) {
+        if(descending)
+            return left.area() > right.area();
+        else
+            return left.area() <= right.area();}
+    );
+}
+
 }}
 

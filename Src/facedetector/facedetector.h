@@ -37,6 +37,8 @@ public:
     float getXShift() const;
     float getYShift() const;
 
+    static void sortByArea(std::vector<Rect> &rects, bool descending=true);
+
 private:
     float xPortion;
     float yPortion;
