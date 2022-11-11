@@ -4,7 +4,7 @@
 
 namespace cv { namespace ofrt {
 
-SunglassesDetector::SunglassesDetector(const std::string &modelfilename) :
+GlassesDetector::GlassesDetector(const std::string &modelfilename) :
     FaceClassifier(cv::Size(100,100),40.0f,0)
 {
     try {
@@ -16,7 +16,7 @@ SunglassesDetector::SunglassesDetector(const std::string &modelfilename) :
     }
 }
 
-std::vector<float> SunglassesDetector::process(const Mat &img, const std::vector<Point2f> &landmarks, bool fast)
+std::vector<float> GlassesDetector::process(const Mat &img, const std::vector<Point2f> &landmarks, bool fast)
 {
     cv::Mat cv_facepatch = extractFacePatch(img,landmarks,iod(),size(),0,v2hshift(),true,cv::INTER_AREA);
     std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(cv_facepatch));
@@ -30,9 +30,9 @@ std::vector<float> SunglassesDetector::process(const Mat &img, const std::vector
     return probs;
 }
 
-cv::Ptr<SunglassesDetector> SunglassesDetector::createClassifier(const std::string &modelfilename)
+cv::Ptr<GlassesDetector> GlassesDetector::createClassifier(const std::string &modelfilename)
 {
-    return makePtr<SunglassesDetector>(modelfilename);
+    return makePtr<GlassesDetector>(modelfilename);
 }
 }}
 

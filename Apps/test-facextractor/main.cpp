@@ -91,8 +91,6 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> livenessdetector = cv::ofrt::FaceLiveness::createClassifier(_cmdparser.get<std::string>("livenessmodel"));
 
-    cv::Ptr<cv::ofrt::FaceClassifier> sunglassesdetector = cv::ofrt::SunglassesDetector::createClassifier();
-
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");

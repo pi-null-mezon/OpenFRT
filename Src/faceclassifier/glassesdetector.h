@@ -24,14 +24,14 @@ using glasses_net_type = loss_multiclass_log<fc<3,avg_pool_everything<al1<al2<al
 
 namespace cv { namespace ofrt {
 
-class SunglassesDetector : public FaceClassifier
+class GlassesDetector : public FaceClassifier
 {
 public:
-    SunglassesDetector(const std::string &modelfilename);
+    GlassesDetector(const std::string &modelfilename);
 
     std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) override;
 
-    static cv::Ptr<SunglassesDetector> createClassifier(const std::string &modelfilename="./glasses_net.dat");
+    static cv::Ptr<GlassesDetector> createClassifier(const std::string &modelfilename="./glasses_net.dat");
 
 private:   
     dlib::softmax<dlib::glasses_net_type::subnet_type> snet;
