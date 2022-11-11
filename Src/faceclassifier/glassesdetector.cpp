@@ -23,9 +23,11 @@ std::vector<float> SunglassesDetector::process(const Mat &img, const std::vector
     if(!fast)
         crops.emplace_back(dlib::fliplr(crops[0]));
     dlib::matrix<float,1,3> p = dlib::sum_rows(dlib::mat(snet(crops.begin(),crops.end())))/crops.size();
-    //spectacles - p(1)
-    //sunglasses - p(2)
-    return std::vector<float>(1,p(2));
+    std::vector<float> probs(3,0.0f);
+    probs[0] = p(0); // no glasses
+    probs[1] = p(1); // spectacles
+    probs[2] = p(2); // sunglasses
+    return probs;
 }
 
 cv::Ptr<SunglassesDetector> SunglassesDetector::createClassifier(const std::string &modelfilename)

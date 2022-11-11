@@ -19,6 +19,7 @@
 #include "faceblur.h"
 #include "headposepredictor.h"
 #include "faceliveness.h"
+#include "glassesdetector.h"
 
 #include "facextractionutils.h"
 
@@ -89,6 +90,8 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> livenessdetector = cv::ofrt::FaceLiveness::createClassifier(_cmdparser.get<std::string>("livenessmodel"));
+
+    cv::Ptr<cv::ofrt::FaceClassifier> sunglassesdetector = cv::ofrt::SunglassesDetector::createClassifier();
 
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
