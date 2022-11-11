@@ -18,6 +18,8 @@ public:
     virtual bool fit(const cv::Mat &image,
                      const std::vector<Rect> &faces,
                      std::vector<std::vector<Point2f>> &landmarks) const = 0;
+
+    static cv::Rect prepareRect(const cv::Rect &source, const cv::Rect &frame, float upscale);
 };
 
 }}

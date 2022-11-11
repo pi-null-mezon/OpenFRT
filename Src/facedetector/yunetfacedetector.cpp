@@ -272,9 +272,6 @@ Mat YuNetFaceDetector::resizeAndPasteInCenterOfCanvas(const Mat &_img, const Siz
     return _canvasmat;
 }
 
-
-
-
 Ptr<FaceDetector> YuNetFaceDetector::createDetector(const std::string &_modelfilename, float _confidenceThreshold)
 {
     return makePtr<YuNetFaceDetector>(_modelfilename,_confidenceThreshold);
