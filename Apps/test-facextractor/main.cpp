@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
                 if (frame_times_pos == frame_times.size())
                     frame_times_pos = 0;
                 if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
-                    cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                    cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,blureness < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
