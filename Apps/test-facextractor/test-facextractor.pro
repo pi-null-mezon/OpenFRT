@@ -3,7 +3,13 @@ CONFIG += console c++14
 CONFIG -= app_bundle
 
 SOURCES += main.cpp \
+    ../../Src/faceclassifier/emotionsclassifier.cpp \
+    ../../Src/faceclassifier/smiledetector.cpp \
     ../../Src/faceclassifier/facebestshot.cpp \
+    ../../Src/faceclassifier/facenoise.cpp \
+    ../../Src/faceclassifier/illumestimator.cpp \
+    ../../Src/faceclassifier/obstaclesdetector.cpp \
+    ../../Src/faceclassifier/openeyedetector.cpp \
     ../../Src/faceclassifier/glassesdetector.cpp \
     ../../Src/faceclassifier/faceblur.cpp \
     ../../Src/faceclassifier/faceliveness.cpp \

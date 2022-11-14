@@ -21,10 +21,7 @@ std::vector<float> FaceBlur::process(const cv::Mat &img, const std::vector<cv::P
     if(!fast)
         crops.emplace_back(dlib::fliplr(crops[0]));
     dlib::matrix<float,1,1> p = dlib::sum_rows(dlib::mat(net(crops))) / crops.size();
-    std::vector<float> blureness(dlib::num_columns(p),0);
-    for(size_t i = 0; i < blureness.size(); ++i)
-        blureness[i] = std::min(1.0f,std::max(0.0f,p(0) + 0.5f));
-    return blureness;
+    return std::vector<float>(1,std::min(1.0f,std::max(0.0f,p(0) + 0.5f)));
 }
 
 Ptr<FaceClassifier> FaceBlur::createClassifier(const std::string &modelfilename)

@@ -30,7 +30,7 @@ std::vector<float> GlassesDetector::process(const Mat &img, const std::vector<Po
     return probs;
 }
 
-cv::Ptr<GlassesDetector> GlassesDetector::createClassifier(const std::string &modelfilename)
+cv::Ptr<FaceClassifier> GlassesDetector::createClassifier(const std::string &modelfilename)
 {
     return makePtr<GlassesDetector>(modelfilename);
 }

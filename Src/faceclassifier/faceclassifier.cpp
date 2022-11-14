@@ -43,11 +43,10 @@ dlib::matrix<dlib::rgb_pixel> FaceClassifier::cvmat2dlibmatrix(const cv::Mat &_c
     return _img;
 }
 
-cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype)
+cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype, cv::Mat *rmatrix)
 {
     static uint8_t _reye[] = {36,37,38,39,40,41};
     static uint8_t _leye[] = {42,43,44,45,46,47};
-
     cv::Mat _patch;
     cv::Point2f _rc(0,0), _lc(0,0);
     if(_landmarks.size() == 68) {
@@ -70,9 +69,9 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
     _tm.at<double>(0,2) += _targetsize.width / 2.0 - _cp.x + h2wshift * _targetsize.width;
     _tm.at<double>(1,2) += _targetsize.height / 2.0 - _cp.y + v2hshift * _targetsize.height;
-
+    if(rmatrix != nullptr)
+        *rmatrix = _tm;
     cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);
-
     return _patch;
 }
 

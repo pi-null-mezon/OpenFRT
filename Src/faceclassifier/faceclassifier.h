@@ -23,7 +23,8 @@ public:
                              float h2wshift,
                              float v2hshift,
                              bool rotate,
-                             int _interpolationtype);
+                             int _interpolationtype,
+                             Mat *rmatrix=nullptr);
 
     cv::Rect scale_rect(const cv::Rect &rect, float scale);
 

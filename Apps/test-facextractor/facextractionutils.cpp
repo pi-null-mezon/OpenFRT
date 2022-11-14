@@ -12,7 +12,7 @@ std::vector<std::vector<cv::Point2f>> detectFacesLandmarks(const cv::Mat &_rgbma
 
     const cv::Rect framerect(0,0,_rgbmat.cols,_rgbmat.rows);
     for(const cv::Rect &_facebox: _facesboxes)
-        _vfacesrects.push_back(cv::ofrt::Facemark::prepareRect(_facebox,framerect,1.35f));
+        _vfacesrects.push_back(cv::ofrt::Facemark::prepareRect(_facebox,framerect,1.4f));
 
     facelandmarker->fit(_rgbmat,_vfacesrects,_vlandmarks);
     return _vlandmarks;
