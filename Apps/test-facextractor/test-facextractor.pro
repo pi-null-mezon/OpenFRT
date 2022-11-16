@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 
 SOURCES += main.cpp \
     ../../Src/faceclassifier/emotionsclassifier.cpp \
+    ../../Src/faceclassifier/forwardviewdetector.cpp \
     ../../Src/faceclassifier/smiledetector.cpp \
     ../../Src/faceclassifier/facebestshot.cpp \
     ../../Src/faceclassifier/facenoise.cpp \
