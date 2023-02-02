@@ -174,6 +174,9 @@ void TrackedFace::setMetaData(int _id, double _distance, const String &_info)
 
 Rect TrackedFace::getRect(int _averagelast) const
 {
+    if(_averagelast == 1)
+        return vhistoryrects[static_cast<size_t>((((pos - 1) % historylength) + historylength) % historylength)];
+
     float _x = 0.0f, _y = 0.0f, _w = 0.0f, _h = 0.0f;
     for(int i = 0; i < _averagelast; ++i) {
         const cv::Rect &_rect = vhistoryrects[ static_cast<size_t>((((pos - 1 - i) % historylength) + historylength) % historylength) ];
