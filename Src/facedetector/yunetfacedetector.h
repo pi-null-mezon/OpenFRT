@@ -35,7 +35,6 @@ private:
     float nmsThreshold;
     int topK;
     mutable cv::dnn::Net net;
-
 };
 
 }}

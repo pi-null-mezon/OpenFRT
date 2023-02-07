@@ -22,6 +22,7 @@ SOURCES += main.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
     ../../Src/facelandmarks/facemarklitecnn.cpp \
     ../../Src/facelandmarks/facemarkdlib.cpp \
+    ../../Src/facelandmarks/facemarkonnx.cpp \
     ../../Src/facelandmarks/facemark.cpp \
     facextractionutils.cpp
 

@@ -15,6 +15,7 @@
 #include "yunetfacedetector.h"
 #include "facemarkcnn.h"
 #include "facemarklitecnn.h"
+#include "facemarkonnx.h"
 #include "facebestshot.h"
 #include "faceblur.h"
 #include "headposepredictor.h"
@@ -45,7 +46,7 @@ const cv::String _options = "{help h               |                        | th
                             "{maxblur              | 1.0                    | max blur allowed                                              }"
                             "{fast                 | true                   | make single inference for each detector and classifier        }"
                             "{multithreaded        | true                   | process tasks in parallel threads when possible               }"
-                            "{livenessmodel        | liveness_net_lite_v2.dat  | face liveness detector                                        }";
+                            "{livenessmodel        | liveness_net_lite_v2.dat  | face liveness detector                                     }";
 
 std::vector<float> frame_times(15,0.0f);
 size_t frame_times_pos = 0;
@@ -85,7 +86,9 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));*/
     cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
-    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
+    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
+    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));
 
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
@@ -176,6 +179,7 @@ int main(int argc, char *argv[])
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
         const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
         double duration_ms = 1000.0 * (cv::getTickCount() - t0) / cv::getTickFrequency();
+        std::cout << duration_ms << std::endl;
         if(_faces.size() != 0) {
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
@@ -203,7 +207,7 @@ int main(int argc, char *argv[])
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 frame_times[frame_times_pos++] = duration_ms;
                 if (frame_times_pos == frame_times.size())
-                    frame_times_pos = 0;
+                    frame_times_pos = 0;               
                 if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
