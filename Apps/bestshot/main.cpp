@@ -21,6 +21,7 @@
 #include "headposepredictor.h"
 #include "faceliveness.h"
 #include "glassesdetector.h"
+#include "facemarkwithpose.h"
 
 #include "facextractionutils.h"
 
@@ -88,7 +89,8 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
-    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));
+    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkWithPose::create(_cmdparser.get<std::string>("facelandmarksmodel"));
 
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));

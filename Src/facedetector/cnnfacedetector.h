@@ -26,7 +26,7 @@ private:
     cv::Mat resizeAndPasteInCenterOfCanvas(const cv::Mat &_img, const cv::Size &_canvassize, cv::Point2f &_originshift, float &_scaleX, float &_scaleY) const;
     float confidenceThreshold;
     mutable cv::dnn::Net net;
-    std::vector<cv::String> outputs;
+    std::vector<String> outputs;
 };
 
 }}
