@@ -20,6 +20,8 @@ public:
              const std::vector<Rect> &faces,
              std::vector<std::vector<Point2f>> &landmarks) const override;
 
+    std::vector<std::vector<float>> last_pose() const;
+
     bool fit(const cv::Mat &image,
              const std::vector<Rect> &faces,
              std::vector<std::vector<Point2f>> &landmarks, std::vector<std::vector<float>> &angles) const;
@@ -30,6 +32,7 @@ private:
     mutable cv::dnn::Net net;
     cv::Size isize;
     std::vector<String> output_names;
+    mutable std::vector<std::vector<float>> poses;
 };
 
 }}

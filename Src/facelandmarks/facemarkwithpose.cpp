@@ -46,8 +46,13 @@ FacemarkWithPose::FacemarkWithPose(const String &modelfilename) :
 
 bool FacemarkWithPose::fit(const cv::Mat &image, const std::vector<Rect> &faces, std::vector<std::vector<Point2f>> &landmarks) const
 {
-    std::vector<std::vector<float>> dummy;
-    return fit(image,faces,landmarks,dummy);
+    poses.resize(0);
+    return fit(image,faces,landmarks,poses);
+}
+
+std::vector<std::vector<float> > FacemarkWithPose::last_pose() const
+{
+    return poses;
 }
 
 bool FacemarkWithPose::fit(const Mat &image, const std::vector<Rect> &faces, std::vector<std::vector<Point2f>> &landmarks, std::vector<std::vector<float>> &angles) const

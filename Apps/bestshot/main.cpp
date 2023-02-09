@@ -1,6 +1,7 @@
 #include <QStringList>
 #include <QUuid>
 #include <QDir>
+#include <QDebug>
 
 #include <thread>
 #include <mutex>
@@ -42,7 +43,7 @@ const cv::String _options = "{help h               |                        | th
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
                             "{headposemodel        | headpose_net_lite.dat  | head pose predictor                                           }"
-                            "{maxangle             | 90.0                   | max angle allowed (any of pitch, yaw, roll)                   }"
+                            "{maxangle             | 120.0                  | max angle allowed (any of pitch, yaw, roll)                   }"
                             "{blurmodel            | blur_net_lite.dat      | face blureness detector                                       }"
                             "{maxblur              | 1.0                    | max blur allowed                                              }"
                             "{fast                 | true                   | make single inference for each detector and classifier        }"
@@ -178,6 +179,7 @@ int main(int argc, char *argv[])
     while(videocapture.read(frame)) {
         double t0 = cv::getTickCount();
         const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+        std::vector<std::vector<float>> headposes = facelandmarker.dynamicCast<cv::ofrt::FacemarkWithPose>()->last_pose();
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
         const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
         double duration_ms = 1000.0 * (cv::getTickCount() - t0) / cv::getTickFrequency();
@@ -194,7 +196,8 @@ int main(int argc, char *argv[])
                         landmarks = _faces[j];
                         cnd.notify_all();
                     }
-                    angles = headposepredictor->process(frame,landmarks,fast);
+                    //angles = headposepredictor->process(frame,landmarks,fast);
+                    angles = headposes[j];
                     {
                         std::unique_lock<std::mutex> lck(mtx);
                         cnd.wait(lck,[&](){return (blureness_ready);});
