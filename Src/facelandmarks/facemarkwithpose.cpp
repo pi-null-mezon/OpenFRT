@@ -71,16 +71,19 @@ bool FacemarkWithPose::fit(const Mat &image, const std::vector<Rect> &faces, std
         std::vector<Mat> output_blobs;
         net.setInput(blob);
         net.forward(output_blobs, output_names);
+        static int angles_idx = output_blobs[0].total() == 3 ? 0 : 1;
+        static int landmarks_idx = angles_idx == 0 ? 1 : 0;
+
         // face landmarks
-        float* data = reinterpret_cast<float*>(output_blobs[0].data);
+        float* data = reinterpret_cast<float*>(output_blobs[landmarks_idx].data);
         std::vector<cv::Point2f> _points;
-        _points.reserve(output_blobs[0].total() / 2);
-        for(size_t i = 0; i < output_blobs[0].total() / 2; ++i)
+        _points.reserve(output_blobs[landmarks_idx].total() / 2);
+        for(size_t i = 0; i < output_blobs[landmarks_idx].total() / 2; ++i)
             _points.push_back(cv::Point2f((0.5f + data[2*i]) * _roirect.width + _rect.x + _roirect.x,
                                           (0.5f + data[2*i+1]) * _roirect.height + _rect.y + _roirect.y));
         landmarks.push_back(std::move(_points));
         // head angles: pitch, yaw, roll
-        data = reinterpret_cast<float*>(output_blobs[1].data);
+        data = reinterpret_cast<float*>(output_blobs[angles_idx].data);
         std::vector<float> tmp_angles(3,0);
         tmp_angles[0] = -90.0f * data[1];
         tmp_angles[1] = -90.0f * data[0];
