@@ -2,8 +2,6 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include <QDebug>
-
 static cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect2f &roiRect)
 {
     roiRect = cv::Rect2f(0,0,0,0);
@@ -36,6 +34,10 @@ FacemarkWithPose::FacemarkWithPose(const String &modelfilename) :
 {
     net = cv::dnn::readNet(modelfilename);
     CV_Assert(!net.empty());
+#ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+#endif
     // Now read names of outbut layers
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::vector<String> layersNames = net.getLayerNames();

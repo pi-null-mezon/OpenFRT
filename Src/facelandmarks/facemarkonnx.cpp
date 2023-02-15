@@ -34,6 +34,10 @@ FacemarkONNX::FacemarkONNX(const String &modelfilename) :
 {
     net = cv::dnn::readNet(modelfilename);
     CV_Assert(!net.empty());
+#ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+#endif
 }
 
 bool FacemarkONNX::fit(const cv::Mat &image, const std::vector<Rect> &faces, std::vector<std::vector<Point2f>> &landmarks) const
