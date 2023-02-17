@@ -7,29 +7,52 @@ namespace cv { namespace ofrt {
 OpenEyeDetector::OpenEyeDetector(const std::string &modelfilename) :
     FaceClassifier(cv::Size(240,320),80.0f,0)
 {
-    try {
-        dlib::blink_net_type net;
-        dlib::deserialize(modelfilename) >> net;
-        snet.subnet() = net.subnet();
-    } catch(const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }
+    net = cv::dnn::readNet(modelfilename);
+    CV_Assert(!net.empty());
+#ifdef FORCE_OPENCV_DNN_TO_USE_CUDA
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+#endif
+    // Now read names of outbut layers
+    std::vector<int> outLayers = net.getUnconnectedOutLayers();
+    std::vector<String> layersNames = net.getLayerNames();
+    output_names.resize(outLayers.size());
+    for(size_t i = 0; i < outLayers.size(); ++i)
+        output_names[i] = layersNames[static_cast<size_t>(outLayers[i]) - 1];
 }
 
 std::vector<float> OpenEyeDetector::process(const Mat &img, const std::vector<Point2f> &landmarks, bool fast)
 {
-    const std::vector<cv::Mat> patches = extractEyesPatches(img,landmarks,iod(),size());
-    std::vector<float> openeyes(patches.size(),0);
-    for(size_t i = 0 ; i < patches.size(); ++i) {
-        cv::Mat normalizedpatch;
-        cv::resize(patches[i],normalizedpatch,cv::Size(48,48));
-        std::vector<dlib::matrix<dlib::rgb_pixel>> crops(1,cvmat2dlibmatrix(normalizedpatch));
-        if(!fast)
-            crops.emplace_back(dlib::fliplr(crops[0]));
-        dlib::matrix<float,1,2> p = dlib::sum_rows(dlib::mat(snet(crops.begin(),crops.end())))/crops.size();
-        openeyes[i] = p(1);
+    std::vector<cv::Mat> patches = extractEyesPatches(img,landmarks,iod(),size());
+    for(size_t i = 0; i < patches.size(); ++i)
+        cv::resize(patches[i],patches[i],cv::Size(40,40),0,0,cv::INTER_AREA);
+    if(!fast) {
+        for(size_t i = 0; i < 2; ++i) {
+            patches.push_back(cv::Mat());
+            cv::flip(patches[i],patches[i+2],1);
+        }
     }
-    return openeyes; // 0 - right, 1 - left
+
+    cv::Mat blob;
+    // trained with mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+    cv::dnn::blobFromImages(patches,blob,1.0/57.12,cv::Size(),cv::Scalar(123.675, 116.28, 103.53),true,false);
+    std::vector<Mat> output_blobs;
+    net.setInput(blob);
+    net.forward(output_blobs, output_names);
+    float *logits = reinterpret_cast<float*>(output_blobs[0].data);
+    const size_t step = output_blobs[0].total() / patches.size();
+    std::vector<std::vector<float>> bprobs(patches.size()); // will represent openeye prob for [right, left, right_flipped, left_flipped]
+    for(size_t i = 0 ; i < bprobs.size(); ++i)
+        bprobs[i] = FaceClassifier::softmax(logits + i*step, step);
+    std::vector<float> prob(2,0.0f); // [right, left]
+    for(size_t i = 0 ; i < bprobs.size(); ++i)
+        prob[i % 2] += bprobs[i][1];
+    for(size_t i = 0 ; i < prob.size(); ++i)
+        prob[i] /= (patches.size() / 2);
+    for(size_t i = 0 ; i < prob.size(); ++i)
+        std::cout << prob[i] << " ";
+    std::cout << std::endl;
+    return prob;
 }
 
 cv::Ptr<FaceClassifier> OpenEyeDetector::createClassifier(const std::string &modelfilename)

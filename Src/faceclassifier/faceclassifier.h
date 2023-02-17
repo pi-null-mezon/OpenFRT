@@ -28,9 +28,11 @@ public:
 
     cv::Rect scale_rect(const cv::Rect &rect, float scale);
 
-    std::vector<dlib::matrix<dlib::rgb_pixel>> make_crops(const cv::Mat &mat);
-
     virtual std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) = 0;
+
+    static std::vector<float> softmax(const std::vector<float> &logits);
+
+    static std::vector<float> softmax(const float *logits, unsigned long size);
 
     const cv::Size size() const;
 

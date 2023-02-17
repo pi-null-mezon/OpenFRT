@@ -13,6 +13,7 @@ SOURCES += main.cpp \
     ../../Src/faceclassifier/openeyedetector.cpp \
     ../../Src/faceclassifier/glassesdetector.cpp \
     ../../Src/faceclassifier/faceblur.cpp \
+    ../../Src/faceclassifier/yawndetector.cpp \
     ../../Src/faceclassifier/faceliveness.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/faceclassifier/headposepredictor.cpp \

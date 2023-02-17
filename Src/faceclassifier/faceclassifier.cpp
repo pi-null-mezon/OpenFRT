@@ -82,13 +82,32 @@ cv::Rect FaceClassifier::scale_rect(const cv::Rect &rect, float scale) {
                     rect.height * scale);
 }
 
-std::vector<dlib::matrix<dlib::rgb_pixel>> FaceClassifier::make_crops(const Mat &mat)
+std::vector<float> FaceClassifier::softmax(const std::vector<float> &logits)
 {
-    dlib::matrix<dlib::rgb_pixel> dlibfacepatch = cvmat2dlibmatrix(mat);
-    std::vector<dlib::matrix<dlib::rgb_pixel>> crops;
-    crops.push_back(dlib::fliplr(dlibfacepatch));
-    crops.push_back(std::move(dlibfacepatch));
-    return crops;
+    float exp_sum = 0.0f;
+    std::vector<float> exs(logits.size(),0.0f);
+    for(size_t i = 0; i < logits.size(); ++i) {
+        exs[i] = std::exp(logits[i]);
+        exp_sum += exs[i];
+    }
+    std::vector<float> probs(logits.size(),0.0f);
+    for(size_t i = 0; i < logits.size(); ++i)
+        probs[i] = exs[i] / exp_sum;
+    return probs;
+}
+
+std::vector<float> FaceClassifier::softmax(const float *logits, unsigned long size)
+{
+    float exp_sum = 0.0f;
+    std::vector<float> exs(size,0.0f);
+    for(size_t i = 0; i < size; ++i) {
+        exs[i] = std::exp(logits[i]);
+        exp_sum += exs[i];
+    }
+    std::vector<float> probs(size,0.0f);
+    for(size_t i = 0; i < size; ++i)
+        probs[i] = exs[i] / exp_sum;
+    return probs;
 }
 
 }}

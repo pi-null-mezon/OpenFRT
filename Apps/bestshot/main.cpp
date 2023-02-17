@@ -19,6 +19,8 @@
 #include "facemarkonnx.h"
 #include "facebestshot.h"
 #include "faceblur.h"
+#include "yawndetector.h"
+#include "openeyedetector.h"
 #include "headposepredictor.h"
 #include "faceliveness.h"
 #include "glassesdetector.h"
@@ -96,6 +98,9 @@ int main(int argc, char *argv[])
     cv::Ptr<cv::ofrt::FaceClassifier> blurenessdetector = cv::ofrt::FaceBlur::createClassifier(_cmdparser.get<std::string>("blurmodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> headposepredictor = cv::ofrt::HeadPosePredictor::createClassifier(_cmdparser.get<std::string>("headposemodel"));
     cv::Ptr<cv::ofrt::FaceClassifier> livenessdetector = cv::ofrt::FaceLiveness::createClassifier(_cmdparser.get<std::string>("livenessmodel"));
+
+    cv::Ptr<cv::ofrt::FaceClassifier> yawndetector = cv::ofrt::YawnDetector::createClassifier("/home/alex/Models/Yawn/yawn_net_test.onnx");
+    cv::Ptr<cv::ofrt::FaceClassifier> openeyedetector = cv::ofrt::OpenEyeDetector::createClassifier("/home/alex/Models/Blink/blink_net_test.onnx");
 
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
@@ -181,10 +186,14 @@ int main(int argc, char *argv[])
         const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
         std::vector<std::vector<float>> headposes = facelandmarker.dynamicCast<cv::ofrt::FacemarkWithPose>()->last_pose();
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
-        const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
+        const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/      
         double duration_ms = 1000.0 * (cv::getTickCount() - t0) / cv::getTickFrequency();
-        std::cout << duration_ms << std::endl;
+        //std::cout << duration_ms << " ms" << std::endl;
         if(_faces.size() != 0) {
+
+            yawndetector->process(frame,_faces[0],fast);
+            openeyedetector->process(frame,_faces[0],fast);
+
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
                 t0 = cv::getTickCount();
