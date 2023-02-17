@@ -18,18 +18,19 @@
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{inputdir i           |                        | input directory with images                                   }"
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
+                            "{videodir v           |                        | input directory with videos                                   }"
                             "{outputdir o          |                        | output directory with images                                  }"
-                            "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
-                            "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
+                            "{facedetmodel m       | ./res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                  }"
+                            "{facedetdscr d        | ./deploy_lowres.prototxt | face detector description                                   }"
                             "{confthresh           | 0.5                    | confidence threshold for the face detector                    }"
-                            "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
+                            "{facelandmarksmodel l | ./facelandmarks_net.dat  | face landmarks model (68 points)                            }"
                             "{targeteyesdistance   | 30.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 150                    | target image width                                            }"
                             "{targetheight         | 150                    | target image height                                           }"
                             "{h2wshift             | 0                      | additional horizontal shift to face crop in portion of target width}"
                             "{v2hshift             | 0                      | additional vertical shift to face crop in portion of target height }"
                             "{rotate               | true                   | apply rotation to make eyes-line horizontal aligned           }"
-                            "{videostrobe          | 30                     | only each videostrobe frame will be processed                 }"
+                            "{videostrobe          | 5                      | only each videostrobe frame will be processed                 }"
                             "{visualize v          | false                  | enable/disable visualization option                           }"
                             "{preservefilenames    | false                  | enable/disable filenames preservation                         }"
                             "{preservesubdirs      | false                  | enable/disable subdirs preservation                           }"
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                                _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create("facelandmarksmodel");
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
@@ -81,17 +82,71 @@ int main(int argc, char *argv[])
     const float v2hshift = _cmdparser.get<float>("v2hshift");
     const bool rotate = _cmdparser.get<bool>("rotate");
     const QString extension = _cmdparser.get<std::string>("codec").c_str();
+    const unsigned int strobe = _cmdparser.get<unsigned int>("videostrobe");
 
     cv::RNG cvrng(7);
 
-    if(_cmdparser.has("videofile")) {
+    if(_cmdparser.has("videodir")) {
+        size_t _facenotfound = 0;
+        size_t _framenum = 0;
+        QStringList _filters;
+        _filters << "*.mp4" << "*.webm" << "*.avi";
+        const QString input_directory = _cmdparser.get<cv::String>("videodir").c_str();
+        const std::vector<QString> absolute_paths = find_all_subdirs_in_path(_cmdparser.get<cv::String>("videodir").c_str());
+        for(const auto & absolute_subdir_name : absolute_paths) {
+            QDir _indir(absolute_subdir_name);
+            QString subdirname = absolute_subdir_name.section(input_directory,1);
+            QStringList _fileslist = _indir.entryList(_filters, QDir::Files | QDir::NoDotAndDotDot);
+            qInfo("There is %u videos has been found in the '%s'", static_cast<uint>(_fileslist.size()), subdirname.toUtf8().constData());
+            QString target_output_path = _outdir.absolutePath();
+            if(_fileslist.size() > 0 && _preservesubdirnames) {
+                target_output_path = target_output_path.append("/%1").arg(subdirname);
+                _outdir.mkpath(target_output_path);
+            }
+            for(int i = 0; i < _fileslist.size(); ++i) {
+                cv::VideoCapture videocapture;
+                const cv::String filename = _indir.absoluteFilePath(_fileslist.at(i)).toStdString();
+                if(videocapture.open(filename)) {
+                    qInfo(" - video file '%s' has been opened successfully", filename.c_str());
+                    cv::Mat frame;
+                    unsigned long framenum = 0;
+                    while(videocapture.read(frame)) {
+                        if(framenum % strobe == 0) {
+                            const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+                            if(_faces.size() != 0) {
+                                qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
+                                const QString filename_woext = _fileslist.at(i).section('.',0,0);
+                                for(size_t j = 0; j < _faces.size(); ++j) {
+                                    const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                                    if(_visualize) {
+                                        cv::imshow("Probe",_facepatch);
+                                        cv::waitKey(1);
+                                    }
+                                    if(!_preservefilenames)
+                                        cv::imwrite(QString("%1/%2.%3").arg(target_output_path,QUuid::createUuid().toString(),extension).toUtf8().constData(),_facepatch);
+                                    else if( _faces.size() == 1)
+                                        cv::imwrite(QString("%1/%2.%3").arg(target_output_path,filename_woext,extension).toUtf8().constData(),_facepatch);
+                                    else
+                                        cv::imwrite(QString("%1/%2_%3.%4").arg(target_output_path,QString::number(j),filename_woext,extension).toUtf8().constData(),_facepatch);
+                                }
+                            } else
+                                qInfo("frame %lu - no faces", framenum);
+                        }
+                        framenum++;
+                    }
+                } else {
+                    qInfo(" - !!! can not open '%s' !!!", filename.c_str());
+                }
+            }
+        }
+        qInfo("Done, frames without faces: %lu / %lu", static_cast<unsigned long>(_facenotfound), static_cast<unsigned long>(_framenum));
+    } else if(_cmdparser.has("videofile")) {
         cv::VideoCapture videocapture;
         const cv::String filename = _cmdparser.get<cv::String>("videofile");
         if(videocapture.open(filename)) {
             qInfo("Video file has been opened successfully");
             cv::Mat frame;
             unsigned long framenum = 0;
-            const unsigned long strobe = static_cast<unsigned long>(_cmdparser.get<unsigned int>("videostrobe"));
             while(videocapture.read(frame)) {
                 if(framenum % strobe == 0) {
                     const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
@@ -103,7 +158,7 @@ int main(int argc, char *argv[])
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
                             }
-                            cv::imwrite(QString("%1/%2.jpg").arg(_outdir.absolutePath(),QUuid::createUuid().toString()).toUtf8().constData(),_facepatch);
+                            cv::imwrite(QString("%1/%2.%3").arg(_outdir.absolutePath(),QUuid::createUuid().toString(),extension).toStdString(),_facepatch);
                         }
                     } else
                         qInfo("frame %lu - no faces", framenum);
@@ -190,7 +245,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        qInfo("Done, percentage of images without faces: %lu / %lu", static_cast<unsigned long>(_facenotfound), static_cast<unsigned long>(_totalfiles));
+        qInfo("Done, images without faces: %lu / %lu", static_cast<unsigned long>(_facenotfound), static_cast<unsigned long>(_totalfiles));
     } else {
         qWarning("You have not specified any input. Nor videofile nor directory! Abort...");
         return 1;
