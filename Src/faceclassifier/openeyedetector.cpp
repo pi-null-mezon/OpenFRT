@@ -49,9 +49,6 @@ std::vector<float> OpenEyeDetector::process(const Mat &img, const std::vector<Po
         prob[i % 2] += bprobs[i][1];
     for(size_t i = 0 ; i < prob.size(); ++i)
         prob[i] /= (patches.size() / 2);
-    for(size_t i = 0 ; i < prob.size(); ++i)
-        std::cout << prob[i] << " ";
-    std::cout << std::endl;
     return prob;
 }
 

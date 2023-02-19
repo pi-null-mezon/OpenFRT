@@ -15,6 +15,7 @@ class YawnDetector : public FaceClassifier {
 public:
     YawnDetector(const String &modelfilename);
 
+    // prob that the face is under yawning phase
     std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) override;
 
     static Ptr<FaceClassifier> createClassifier(const String &modelfilename="./yawn_net.onnx");

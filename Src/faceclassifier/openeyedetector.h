@@ -12,6 +12,7 @@ class OpenEyeDetector : public FaceClassifier
 public:
     OpenEyeDetector(const std::string &modelfilename);
 
+    // probability that the eyes are opened [0] - right, [1] - left
     std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) override;
 
     static cv::Ptr<FaceClassifier> createClassifier(const std::string &modelfilename="./blink_net.onnx");
