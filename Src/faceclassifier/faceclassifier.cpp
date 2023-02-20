@@ -31,7 +31,7 @@ float FaceClassifier::v2hshift() const
     return m_v2hshift;
 }
 
-dlib::matrix<dlib::rgb_pixel> FaceClassifier::cvmat2dlibmatrix(const cv::Mat &_cvmat)
+/*dlib::matrix<dlib::rgb_pixel> FaceClassifier::cvmat2dlibmatrix(const cv::Mat &_cvmat)
 {
     cv::Mat _mat = _cvmat;
     if(_cvmat.isContinuous() == false)
@@ -41,7 +41,7 @@ dlib::matrix<dlib::rgb_pixel> FaceClassifier::cvmat2dlibmatrix(const cv::Mat &_c
     for(long i = 0; i < static_cast<long>(_mat.total()); ++i)
         _img(i) = dlib::rgb_pixel(_p[3*i+2],_p[3*i+1],_p[3*i]); // BGR to RGB
     return _img;
-}
+}*/
 
 cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype, cv::Mat *rmatrix)
 {

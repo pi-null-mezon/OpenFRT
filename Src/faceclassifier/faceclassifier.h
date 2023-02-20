@@ -2,7 +2,6 @@
 #define FACECLASSISIER_H
 
 #include <opencv2/core.hpp>
-#include <dlib/dnn.h>
 
 namespace cv { namespace ofrt {
 
@@ -14,7 +13,7 @@ public:
 
     virtual ~FaceClassifier();
 
-    dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat);
+    /*dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat);*/
 
     cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
                              const std::vector<cv::Point2f> &_landmarks,
