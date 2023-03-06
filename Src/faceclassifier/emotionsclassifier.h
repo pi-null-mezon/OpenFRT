@@ -2,6 +2,7 @@
 #define EMOTIONSCLASSIFIER_H
 
 #include "faceclassifier.h"
+#include <dlib/dnn.h>
 
 namespace dlib { namespace emotions {
 

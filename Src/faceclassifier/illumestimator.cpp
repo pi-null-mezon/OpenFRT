@@ -1,6 +1,7 @@
 #include "illumestimator.h"
 
 #include <opencv2/imgproc.hpp>
+#include <numeric>
 
 namespace cv { namespace ofrt {
 

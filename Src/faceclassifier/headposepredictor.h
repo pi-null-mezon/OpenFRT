@@ -2,6 +2,7 @@
 #define HEADPOSEPREDICTOR_H
 
 #include "faceclassifier.h"
+#include <dlib/dnn.h>
 
 namespace dlib { namespace headpose {
 

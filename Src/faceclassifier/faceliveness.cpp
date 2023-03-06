@@ -2,6 +2,18 @@
 
 #include <opencv2/imgproc.hpp>
 
+static dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat)
+{
+    cv::Mat _mat = _cvmat;
+    if(_cvmat.isContinuous() == false)
+        _mat = _cvmat.clone();
+    unsigned char *_p = _mat.ptr<unsigned char>(0);
+    dlib::matrix<dlib::rgb_pixel> _img(_mat.rows,_mat.cols);
+    for(long i = 0; i < static_cast<long>(_mat.total()); ++i)
+        _img(i) = dlib::rgb_pixel(_p[3*i+2],_p[3*i+1],_p[3*i]); // BGR to RGB
+    return _img;
+}
+
 namespace cv { namespace ofrt {
 
 FaceLiveness::FaceLiveness(const std::string &modelfilename):
