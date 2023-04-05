@@ -28,4 +28,4 @@ INCLUDEPATH += $${PWD}/../../../Kaggle/Shared/dlibimgaugment \
                $${PWD}/../../../Kaggle/Shared/opencvimgaugment \
                $${PWD}/../../../Kaggle/Shared/dlibopencvconverter
 
-#DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=350
+DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=250

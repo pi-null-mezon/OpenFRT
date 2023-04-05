@@ -40,8 +40,8 @@ cv::Mat extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> 
     _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y + v2hshift * _targetsize.height;
 
     int _interpolationtype = cv::INTER_LINEAR;
-    if(_scale < 1.0)
-        _interpolationtype = cv::INTER_AREA;
+    /*if(_scale < 1.0)
+        _interpolationtype = cv::INTER_AREA;*/
     cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);
 
     return _patch;

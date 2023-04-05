@@ -263,7 +263,7 @@ std::vector<QString> find_all_subdirs_in_path(const QString &path) {
             std::vector<QString> subdirs_list = find_all_subdirs_in_path(QString("%1/%2").arg(path,subdirname));
             all_levels_subdirs_list.insert(all_levels_subdirs_list.end(),subdirs_list.begin(),subdirs_list.end());
         }
-    } else
-        all_levels_subdirs_list.push_back(path);
+    }
+    all_levels_subdirs_list.push_back(path);
     return all_levels_subdirs_list;
 }
