@@ -12,8 +12,8 @@
 
 #include "facextractionutils.h"
 
-//#include "dlibimgaugment.h"
-//#include "opencvimgaugment.h"
+#include "dlibimgaugment.h"
+#include "opencvimgaugment.h"
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{inputdir i           |                        | input directory with images                                   }"
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
                                 qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                                 const QString filename_woext = _fileslist.at(i).section('.',0,0);
                                 for(size_t j = 0; j < _faces.size(); ++j) {
-                                    const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                                    const cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                                     if(_visualize) {
                                         cv::imshow("Probe",_facepatch);
                                         cv::waitKey(1);
@@ -187,23 +187,39 @@ int main(int argc, char *argv[])
                 _outdir.mkpath(target_output_path);
             }
             for(int i = 0; i < _fileslist.size(); ++i) {
+                /*if(QFileInfo(_indir.absoluteFilePath(_fileslist.at(i))).size()/1024 > 7) {
+                    qInfo("%d) %s - skipped", i, _fileslist.at(i).toUtf8().constData());
+                    continue;
+                }*/
                 _totalfiles++;
                 cv::Mat _tmpmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
 
-                /*float resize = cvrng.uniform(0.15f,0.6f);
+                float resize = cvrng.uniform(0.15f,0.6f);
                 cv::resize(_tmpmat,_tmpmat,cv::Size(),resize,resize);
                 _tmpmat = jitterimage(_tmpmat,cvrng,cv::Size(0,0),0.05,0.05,15,cv::BORDER_REFLECT,cv::Scalar(0),false);
-                _tmpmat *= cvrng.uniform(0.1f,2.0f);
+                _tmpmat *= cvrng.uniform(0.1f,0.9f);
 
                 if(cvrng.uniform(0.0f,1.0f) < 0.5f) {
                     _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,3));
                     _tmpmat = applyMotionBlur(_tmpmat,90.0f*cvrng.uniform(0.0f,1.0f),cvrng.uniform(2,3));
                 }
-                if(cvrng.uniform(0.0f,1.0f) < 0.5f)
-                    _tmpmat = addNoise(_tmpmat,cvrng,0,cvrng.uniform(1,16));
-                if(cvrng.uniform(0.0f,1.0f) < 0.5f)
-                    _tmpmat = posterize(_tmpmat, cvrng.uniform(1,32));
+                if(cvrng.uniform(0.0f,1.0f) < 1.5f)
+                    _tmpmat = addNoise(_tmpmat,cvrng,0,cvrng.uniform(16,80));
 
+                std::vector<unsigned char> _bytes;
+                std::vector<int> compression_params;
+                compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+                compression_params.push_back(cvrng.uniform(65,99));
+                cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+
+
+                /*if(cvrng.uniform(0.0f,1.0f) < 0.5f)
+                    _tmpmat = posterize(_tmpmat, cvrng.uniform(1,32));*/
+
+
+
+                /*
                 // 0.175 - 45 - 85 %, 0.35 - 90 - 25 %, 0.70 - 180 - 15 %
                 int max_jpeg_quality = (int)(100.0f*(0.08f / resize));
 
@@ -212,7 +228,8 @@ int main(int argc, char *argv[])
                 compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
                 compression_params.push_back(cvrng.uniform(5,max_jpeg_quality));
                 cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
-                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);*/
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+                */
 
 
                 cv::Mat _imgmat = _tmpmat;
@@ -226,7 +243,7 @@ int main(int argc, char *argv[])
                     } else {
                         qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
                         const QString filename_woext = _fileslist.at(i).section('.',0,0);
-                        for(size_t j = 0; j < _faces.size(); ++j) {
+                        for(size_t j = 0; j < qMax(_faces.size(),size_t(1)); ++j) {
                             const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);

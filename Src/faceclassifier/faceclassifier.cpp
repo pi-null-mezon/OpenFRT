@@ -63,8 +63,14 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     }
     cv::Point2f _cd = _lc - _rc;
     float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
+    cv::Point2f nose = _landmarks[27] - _landmarks[33];
+    float _noselength = std::sqrt((nose.x)*(nose.x) + (nose.y)*(nose.y));
     float _scale = _targeteyesdistance / _eyesdistance;
     float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
+    if(_eyesdistance / _noselength  < 1.0f) { // very high yaw
+        _scale = _targeteyesdistance / (1.4 * std::sqrt((nose.x)*(nose.x) + (nose.y)*(nose.y)));
+        _angle = 0;
+    }
     cv::Point2f _cp = (_rc + _lc) / 2.0f;
     cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
     _tm.at<double>(0,2) += _targetsize.width / 2.0 - _cp.x + h2wshift * _targetsize.width;
