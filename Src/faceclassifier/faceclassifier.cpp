@@ -48,7 +48,7 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     static uint8_t _reye[] = {36,37,38,39,40,41};
     static uint8_t _leye[] = {42,43,44,45,46,47};
     cv::Mat _patch;
-    cv::Point2f _rc(0,0), _lc(0,0);
+    cv::Point2f _rc(0,0), _lc(0,0), nose(0,0);
     if(_landmarks.size() == 68) {
         int _len = sizeof(_reye)/sizeof(_reye[0]);
         for(int i = 0; i < _len; ++i) {
@@ -57,18 +57,19 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
         }
         _rc /= _len;
         _lc /= _len;
+        nose = _landmarks[27] - _landmarks[33];
     } else if (_landmarks.size() == 5) {
         _rc = _landmarks[0];
         _lc = _landmarks[1];
+        nose = (_rc + _lc) / 2 - _landmarks[2];
     }
     cv::Point2f _cd = _lc - _rc;
     float _eyesdistance = std::sqrt((_cd.x)*(_cd.x) + (_cd.y)*(_cd.y));
-    cv::Point2f nose = _landmarks[27] - _landmarks[33];
-    float _noselength = std::sqrt((nose.x)*(nose.x) + (nose.y)*(nose.y));
+    float _noselength = std::sqrt((nose.x)*(nose.x) + (nose.y)*(nose.y)) + 1E-6;
     float _scale = _targeteyesdistance / _eyesdistance;
     float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
     if(_eyesdistance / _noselength  < 1.0f) { // very high yaw
-        _scale = _targeteyesdistance / (1.4 * std::sqrt((nose.x)*(nose.x) + (nose.y)*(nose.y)));
+        _scale = _targeteyesdistance / (1.4 * _noselength);
         _angle = 0;
     }
     cv::Point2f _cp = (_rc + _lc) / 2.0f;

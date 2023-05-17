@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
                     if(_faces.size() != 0) {
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                         for(size_t j = 0; j < _faces.size(); ++j) {
-                            const cv::Mat _facepatch = extractFacePatch(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                            const cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
                 _totalfiles++;
                 cv::Mat _tmpmat = cv::imread(_indir.absoluteFilePath(_fileslist.at(i)).toLocal8Bit().constData());
 
-                float resize = cvrng.uniform(0.15f,0.6f);
+                /*float resize = cvrng.uniform(0.15f,0.6f);
                 cv::resize(_tmpmat,_tmpmat,cv::Size(),resize,resize);
                 _tmpmat = jitterimage(_tmpmat,cvrng,cv::Size(0,0),0.05,0.05,15,cv::BORDER_REFLECT,cv::Scalar(0),false);
                 _tmpmat *= cvrng.uniform(0.1f,0.9f);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
                 compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
                 compression_params.push_back(cvrng.uniform(65,99));
                 cv::imencode("*.jpg",_tmpmat,_bytes,compression_params);
-                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);
+                _tmpmat = cv::imdecode(_bytes,cv::IMREAD_UNCHANGED);*/
 
 
                 /*if(cvrng.uniform(0.0f,1.0f) < 0.5f)
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
                         qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
                         const QString filename_woext = _fileslist.at(i).section('.',0,0);
                         for(size_t j = 0; j < qMax(_faces.size(),size_t(1)); ++j) {
-                            const cv::Mat _facepatch = extractFacePatch(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                            const cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
