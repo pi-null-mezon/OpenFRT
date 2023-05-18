@@ -2,14 +2,10 @@
 
 #include <opencv2/imgproc.hpp>
 
-#include <opencv2/highgui.hpp>
-#include <iostream>
-
-
 namespace cv { namespace ofrt {
 
 RotateClassifier::RotateClassifier(const String &modelfilename) :
-    FaceClassifier(cv::Size(48,48),20.0f,-0.2f)
+    FaceClassifier(cv::Size(48,48),0,0)
 {
     net = cv::dnn::readNet(modelfilename);
     CV_Assert(!net.empty());
@@ -33,8 +29,6 @@ std::vector<float> RotateClassifier::process(const Mat &img, const std::vector<P
 std::vector<float> RotateClassifier::process(const Mat &img, const Rect facerect, bool fast)
 {
     cv::Mat facepatch = extractFacePatch(img,facerect,size(),1.0f,cv::INTER_LINEAR);
-    cv::imshow("rotate", facepatch);
-    std::cout << facepatch.total() << std::endl;
     cv::Mat blob;
     cv::dnn::blobFromImage(facepatch,blob,1.0/57.375,cv::Size(),cv::Scalar(116.025,116.025,116.025),false,false);
     std::vector<Mat> output_blobs;
