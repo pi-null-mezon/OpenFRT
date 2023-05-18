@@ -28,7 +28,7 @@ std::vector<float> RotateClassifier::process(const Mat &img, const std::vector<P
 
 std::vector<float> RotateClassifier::process(const Mat &img, const Rect facerect, bool fast)
 {
-    cv::Mat facepatch = extractFacePatch(img,facerect,size(),1.0f,cv::INTER_LINEAR);
+    cv::Mat facepatch = extractFacePatch(img,facerect,size(),1.5f,cv::INTER_LINEAR);
     cv::Mat blob;
     cv::dnn::blobFromImage(facepatch,blob,1.0/57.375,cv::Size(),cv::Scalar(116.025,116.025,116.025),false,false);
     std::vector<Mat> output_blobs;
