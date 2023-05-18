@@ -17,6 +17,7 @@ SOURCES += main.cpp \
     ../../Src/faceclassifier/faceliveness.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/faceclassifier/headposepredictor.cpp \
+    ../../Src/faceclassifier/rotateclassifier.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
@@ -25,8 +26,7 @@ SOURCES += main.cpp \
     ../../Src/facelandmarks/facemarkdlib.cpp \
     ../../Src/facelandmarks/facemarkonnx.cpp \
     ../../Src/facelandmarks/facemarkwithpose.cpp \
-    ../../Src/facelandmarks/facemark.cpp \
-    facextractionutils.cpp
+    ../../Src/facelandmarks/facemark.cpp
 
 INCLUDEPATH += ../../Src/facedetector \
                ../../Src/facelandmarks \
@@ -43,8 +43,7 @@ unix: {
 HEADERS += \
     ../../Src/faceclassifier/faceblur.h \
     ../../Src/faceclassifier/faceliveness.h \
-    ../../Src/faceclassifier/headposepredictor.h \
-    facextractionutils.h
+    ../../Src/faceclassifier/headposepredictor.h
 
-#DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=150
+DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=64
 

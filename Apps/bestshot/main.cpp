@@ -20,13 +20,12 @@
 #include "facebestshot.h"
 #include "faceblur.h"
 #include "yawndetector.h"
+#include "rotateclassifier.h"
 #include "openeyedetector.h"
 #include "headposepredictor.h"
 #include "faceliveness.h"
 #include "glassesdetector.h"
 #include "facemarkwithpose.h"
-
-#include "facextractionutils.h"
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{device               | 0                      | video device                                                  }"
@@ -101,6 +100,9 @@ int main(int argc, char *argv[])
 
     cv::Ptr<cv::ofrt::FaceClassifier> yawndetector = cv::ofrt::YawnDetector::createClassifier("/home/alex/Models/Yawn/yawn_net.onnx");
     cv::Ptr<cv::ofrt::FaceClassifier> openeyedetector = cv::ofrt::OpenEyeDetector::createClassifier("/home/alex/Models/Blink/blink_net.onnx");
+
+    cv::Ptr<cv::ofrt::FaceClassifier> rotateclassifier = cv::ofrt::RotateClassifier::createClassifier("/home/alex/Models/Rotation/rotate_net.onnx");
+    cv::Ptr<cv::ofrt::RotateClassifier> rotateclassifier_proxy = rotateclassifier.dynamicCast<cv::ofrt::RotateClassifier>();
 
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
@@ -183,7 +185,9 @@ int main(int argc, char *argv[])
     size_t faces_found_erlier = 0;
     while(videocapture.read(frame)) {
         double t0 = cv::getTickCount();
-        const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+        std::vector<cv::Rect> _bboxes = facedetector->detectFaces(frame);
+        std::vector<std::vector<cv::Point2f>> _faces;
+        facelandmarker->fit(frame, _bboxes, _faces);
         std::vector<std::vector<float>> headposes = facelandmarker.dynamicCast<cv::ofrt::FacemarkWithPose>()->last_pose();
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
         const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/      
@@ -218,6 +222,12 @@ int main(int argc, char *argv[])
                     liveness_score = livenessdetector->process(frame,landmarks,fast)[0];
                     angles = headposepredictor->process(frame,landmarks,fast);
                 }
+                // --
+                auto p = rotateclassifier_proxy->process(frame,_bboxes[0],fast);
+                for(size_t i = 0 ; i < p.size(); ++i)
+                    std::cout << p[i] << " ";              
+                std::cout << std::endl;
+                // --
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 frame_times[frame_times_pos++] = duration_ms;
                 if (frame_times_pos == frame_times.size())

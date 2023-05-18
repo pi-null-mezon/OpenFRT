@@ -82,6 +82,28 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     return _patch;
 }
 
+Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const Rect facerect, const Size &_targetsize, float scale, int _interpolationtype)
+{
+    cv::Mat facepatch = _rgbmat(scale_rect(facerect,scale) & cv::Rect(0,0,_rgbmat.cols,_rgbmat.rows));
+    cv::Rect2f roiRect = cv::Rect2f(0,0,0,0);
+    if(static_cast<float>(facepatch.cols)/facepatch.rows > static_cast<float>(_targetsize.width)/_targetsize.height) {
+        roiRect.height = static_cast<float>(facepatch.rows);
+        roiRect.width = facepatch.rows * static_cast<float>(_targetsize.width)/_targetsize.height;
+        roiRect.x = (facepatch.cols - roiRect.width)/2.0f;
+    } else {
+        roiRect.width = static_cast<float>(facepatch.cols);
+        roiRect.height = facepatch.cols * static_cast<float>(_targetsize.height)/_targetsize.width;
+        roiRect.y = (facepatch.rows - roiRect.height)/2.0f;
+    }
+    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(facepatch.cols), static_cast<float>(facepatch.rows));
+    cv::Mat output;
+    if(roiRect.area() > 0)  {
+        cv::Mat croppedImg(facepatch, roiRect);
+        cv::resize(croppedImg, output, _targetsize, 0, 0, _interpolationtype);
+    }
+    return output;
+}
+
 cv::Rect FaceClassifier::scale_rect(const cv::Rect &rect, float scale) {
     return cv::Rect(rect.x - rect.width * (scale - 1.0f) / 2.0f,
                     rect.y - rect.height * (scale - 1.0f) / 2.0f,
@@ -91,16 +113,7 @@ cv::Rect FaceClassifier::scale_rect(const cv::Rect &rect, float scale) {
 
 std::vector<float> FaceClassifier::softmax(const std::vector<float> &logits)
 {
-    float exp_sum = 0.0f;
-    std::vector<float> exs(logits.size(),0.0f);
-    for(size_t i = 0; i < logits.size(); ++i) {
-        exs[i] = std::exp(logits[i]);
-        exp_sum += exs[i];
-    }
-    std::vector<float> probs(logits.size(),0.0f);
-    for(size_t i = 0; i < logits.size(); ++i)
-        probs[i] = exs[i] / exp_sum;
-    return probs;
+    return softmax(logits.data(), logits.size());
 }
 
 std::vector<float> FaceClassifier::softmax(const float *logits, unsigned long size)

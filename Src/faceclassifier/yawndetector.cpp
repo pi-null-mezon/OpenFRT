@@ -41,7 +41,7 @@ std::vector<float> YawnDetector::process(const Mat &img, const std::vector<Point
         bprobs[i] = FaceClassifier::softmax(logits + i*step, step);
     std::vector<float> prob(1,0.0f);
     for(size_t i = 0 ; i < bprobs.size(); ++i)
-        prob[0] += bprobs[i][1]; // 1 - moith open
+        prob[0] += bprobs[i][1]; // 1 - mouth open
     prob[0] /= bprobs.size();
     return prob;
 }

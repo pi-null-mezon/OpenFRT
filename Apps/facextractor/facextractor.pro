@@ -7,8 +7,7 @@ SOURCES += main.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
-    ../../Src/facelandmarks/facemark.cpp \
-    facextractionutils.cpp
+    ../../Src/facelandmarks/facemark.cpp
 
 INCLUDEPATH += ../../Src/facedetector \
                ../../Src/facelandmarks
@@ -21,8 +20,7 @@ unix: {
    INSTALLS += target
 }
 
-HEADERS += \
-    facextractionutils.h
+HEADERS +=
 
 INCLUDEPATH += $${PWD}/../../../Kaggle/Shared/dlibimgaugment \
                $${PWD}/../../../Kaggle/Shared/opencvimgaugment \

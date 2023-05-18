@@ -10,8 +10,6 @@
 #include "yunetfacedetector.h"
 #include "facemarkcnn.h"
 
-#include "facextractionutils.h"
-
 #include "dlibimgaugment.h"
 #include "opencvimgaugment.h"
 
@@ -112,7 +110,9 @@ int main(int argc, char *argv[])
                     unsigned long framenum = 0;
                     while(videocapture.read(frame)) {
                         if(framenum % strobe == 0) {
-                            const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+                            std::vector<cv::Rect> bboxes = facedetector->detectFaces(frame);
+                            std::vector<std::vector<cv::Point2f>> _faces;
+                            facelandmarker->fit(frame, bboxes, _faces);
                             if(_faces.size() != 0) {
                                 qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                                 const QString filename_woext = _fileslist.at(i).section('.',0,0);
@@ -149,7 +149,9 @@ int main(int argc, char *argv[])
             unsigned long framenum = 0;
             while(videocapture.read(frame)) {
                 if(framenum % strobe == 0) {
-                    const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(frame,facedetector,facelandmarker);
+                    std::vector<cv::Rect> bboxes = facedetector->detectFaces(frame);
+                    std::vector<std::vector<cv::Point2f>> _faces;
+                    facelandmarker->fit(frame, bboxes, _faces);
                     if(_faces.size() != 0) {
                         qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
                         for(size_t j = 0; j < _faces.size(); ++j) {
@@ -234,7 +236,9 @@ int main(int argc, char *argv[])
 
                 cv::Mat _imgmat = _tmpmat;
                 if(!_imgmat.empty()) {
-                    const std::vector<std::vector<cv::Point2f>> _faces = detectFacesLandmarks(_imgmat,facedetector,facelandmarker);
+                    std::vector<cv::Rect> bboxes = facedetector->detectFaces(_imgmat);
+                    std::vector<std::vector<cv::Point2f>> _faces;
+                    facelandmarker->fit(_imgmat, bboxes, _faces);
                     /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yundet = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
                     const std::vector<std::vector<cv::Point2f>> _faces = yundet->detectLandmarks(_imgmat);*/
                     if(_faces.size() == 0) {

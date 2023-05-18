@@ -23,6 +23,8 @@ public:
     static cv::Rect prepareRect(const cv::Rect &source, const cv::Rect &frame, float upscale);
 
     static cv::Mat extractFace(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int interpolationtype=cv::INTER_LINEAR);
+
+    static cv::Mat cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect2f &roiRect, int interpolation=cv::INTER_LINEAR);
 };
 
 }}

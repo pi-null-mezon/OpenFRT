@@ -61,4 +61,25 @@ Mat Facemark::extractFace(const Mat &_rgbmat, const std::vector<Point2f> &_landm
     return _patch;
 }
 
+Mat Facemark::cropInsideFromCenterAndResize(const cv::Mat &input, const cv::Size &size, cv::Rect2f &roiRect, int interpolation)
+{
+    roiRect = cv::Rect2f(0,0,0,0);
+    if(static_cast<float>(input.cols)/input.rows > static_cast<float>(size.width)/size.height) {
+        roiRect.height = static_cast<float>(input.rows);
+        roiRect.width = input.rows * static_cast<float>(size.width)/size.height;
+        roiRect.x = (input.cols - roiRect.width)/2.0f;
+    } else {
+        roiRect.width = static_cast<float>(input.cols);
+        roiRect.height = input.cols * static_cast<float>(size.height)/size.width;
+        roiRect.y = (input.rows - roiRect.height)/2.0f;
+    }
+    roiRect &= cv::Rect2f(0.0f, 0.0f, static_cast<float>(input.cols), static_cast<float>(input.rows));
+    cv::Mat output;
+    if(roiRect.area() > 0)  {
+        cv::Mat croppedImg(input, roiRect);
+        cv::resize(croppedImg, output, size, 0, 0, interpolation);
+    }
+    return output;
+}
+
 }}
