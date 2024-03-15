@@ -7,9 +7,6 @@
 
 namespace cv { namespace ofrt {
 
-/**
- * @brief The FacemarkCNN class is a custom 68 facial points detector based on CNN
- */
 class YawnDetector : public FaceClassifier {
 
 public:

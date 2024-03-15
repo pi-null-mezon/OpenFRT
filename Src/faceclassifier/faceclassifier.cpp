@@ -1,6 +1,7 @@
 #include "faceclassifier.h"
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
 
 namespace cv { namespace ofrt {
 
@@ -44,7 +45,7 @@ float FaceClassifier::v2hshift() const
 }*/
 
 cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype, cv::Mat *rmatrix)
-{
+{ 
     static uint8_t _reye[] = {36,37,38,39,40,41};
     static uint8_t _leye[] = {42,43,44,45,46,47};
     cv::Mat _patch;
@@ -81,6 +82,46 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     cv::warpAffine(_rgbmat,_patch,_tm,_targetsize,_interpolationtype);
     return _patch;
 }
+
+Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const std::vector<Point2f> &_landmarks, const Size &_targetsize, int _interpolationtype, Mat *rmatrix)
+{
+    std::vector<cv::Point2f> from;
+    if(_landmarks.size() == 68) {
+        from = std::vector<cv::Point2f>(5, cv::Point2f(0,0));
+        static uint8_t _reye[] = {36,37,38,39,40,41};
+        static uint8_t _leye[] = {42,43,44,45,46,47};
+        int _len = sizeof(_reye)/sizeof(_reye[0]);
+        for(int i = 0; i < _len; ++i) {
+            from[0] += _landmarks[_reye[i]];
+            from[1] += _landmarks[_leye[i]];
+        }
+        from[0] /= _len;
+        from[1] /= _len;
+        from[2] = _landmarks[33];
+        from[3] = _landmarks[60];
+        from[4] = _landmarks[64];
+    } else if (_landmarks.size() == 5) {
+        from[0] = _landmarks[0];
+    }
+    std::vector<cv::Point2f> to = {cv::Point2f(30.2946, 51.6963),
+                                   cv::Point2f(65.5318, 51.5014),
+                                   cv::Point2f(48.0252, 71.7366),
+                                   cv::Point2f(33.5493, 92.3655),
+                                   cv::Point2f(62.7299, 92.2041)};
+    float scale_x = static_cast<float>(_targetsize.width) / 96.0;
+    float scale_y = static_cast<float>(_targetsize.height) / 112.0;
+    for(size_t i = 0; i < to.size(); ++i)
+        to[i] = cv::Point2f(to[i].x*scale_x, to[i].y*scale_y);
+
+    cv::Mat tm = cv::estimateAffinePartial2D(from, to, cv::noArray(), cv::LMEDS);
+    if(rmatrix != nullptr)
+        *rmatrix = tm;
+
+    cv::Mat patch;
+    cv::warpAffine(_rgbmat,patch,tm,_targetsize,_interpolationtype);
+    return patch;
+}
+
 
 Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const Rect facerect, const Size &_targetsize, float scale, int _interpolationtype)
 {

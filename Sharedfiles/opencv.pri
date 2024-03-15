@@ -53,7 +53,7 @@ linux {
             -lopencv_videoio \
             -lopencv_imgcodecs \
             -lopencv_dnn \
-            -lopencv_face
+            -lopencv_calib3d
 
     cudabackend {
         DEFINES+=FORCE_OPENCV_DNN_TO_USE_CUDA

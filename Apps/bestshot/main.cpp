@@ -26,6 +26,8 @@
 #include "faceliveness.h"
 #include "glassesdetector.h"
 #include "facemarkwithpose.h"
+#include "crfiqaestimator.h"
+
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
                             "{device               | 0                      | video device                                                  }"
@@ -103,6 +105,8 @@ int main(int argc, char *argv[])
 
     cv::Ptr<cv::ofrt::FaceClassifier> rotateclassifier = cv::ofrt::RotateClassifier::createClassifier("/home/alex/Models/Rotation/rotate_net.onnx");
     cv::Ptr<cv::ofrt::RotateClassifier> rotateclassifier_proxy = rotateclassifier.dynamicCast<cv::ofrt::RotateClassifier>();
+
+    cv::Ptr<cv::ofrt::FaceClassifier> crfiqaestimator = cv::ofrt::CRFIQAEstimator::createClassifier("/home/alex/Models/CRFIQA/crfiqa_estimator.onnx");
 
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
@@ -195,12 +199,14 @@ int main(int argc, char *argv[])
         //std::cout << duration_ms << " ms" << std::endl;
         if(_faces.size() != 0) {
 
-            yawndetector->process(frame,_faces[0],fast);
-            openeyedetector->process(frame,_faces[0],fast);
-
             //qInfo("frame # %lu - %d face/s found", framenum, static_cast<int>(_faces.size()));
             for(size_t j = 0; j < _faces.size(); ++j) {
                 t0 = cv::getTickCount();
+
+                auto yawprob = yawndetector->process(frame,_faces[j],fast)[0];
+                auto eyesopen = openeyedetector->process(frame,_faces[j],fast)[0];
+                auto crfiqa = crfiqaestimator->process(frame,_faces[j],false)[0];
+
                 if(multithreaded) {
                     {
                         std::lock_guard<std::mutex> lck(mtx);
@@ -224,9 +230,9 @@ int main(int argc, char *argv[])
                 }
                 // --
                 auto p = rotateclassifier_proxy->process(frame,_bboxes[0],fast);
-                for(size_t i = 0 ; i < p.size(); ++i)
+                /*for(size_t i = 0 ; i < p.size(); ++i)
                     std::cout << p[i] << " ";              
-                std::cout << std::endl;
+                std::cout << std::endl;*/
                 // --
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 frame_times[frame_times_pos++] = duration_ms;
@@ -234,6 +240,7 @@ int main(int argc, char *argv[])
                     frame_times_pos = 0;
                 if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                    //cv::Mat _facepatch = cv::ofrt::FaceClassifier::extractFacePatch(frame,_faces[j],_targetsize,cv::INTER_LINEAR);
                     std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,blureness < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
@@ -251,6 +258,18 @@ int main(int argc, char *argv[])
                     info = QString("liveness:  %1").arg(QString::number(liveness_score,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,100), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,99), cv::FONT_HERSHEY_SIMPLEX,0.5,liveness_score > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+
+                    info = QString("yaw:  %1").arg(QString::number(yawprob,'f',2)).toStdString();
+                    cv::putText(_facepatch,info,cv::Point(20,120), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,119), cv::FONT_HERSHEY_SIMPLEX,0.5, yawprob < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+
+                    info = QString("openeyes:  %1").arg(QString::number(eyesopen,'f',2)).toStdString();
+                    cv::putText(_facepatch,info,cv::Point(20,140), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,139), cv::FONT_HERSHEY_SIMPLEX,0.5, eyesopen > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+
+                    info = QString("CRFIQA:  %1").arg(QString::number(crfiqa,'f',2)).toStdString();
+                    cv::putText(_facepatch,info,cv::Point(20,160), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,159), cv::FONT_HERSHEY_SIMPLEX,0.5, crfiqa > 0.525 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
                     cv::imshow(std::string("bestshot_") + std::to_string(j), _facepatch);
                 }

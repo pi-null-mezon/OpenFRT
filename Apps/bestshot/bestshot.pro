@@ -18,6 +18,7 @@ SOURCES += main.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
     ../../Src/faceclassifier/headposepredictor.cpp \
     ../../Src/faceclassifier/rotateclassifier.cpp \
+    ../../Src/faceclassifier/crfiqaestimator.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
@@ -27,6 +28,7 @@ SOURCES += main.cpp \
     ../../Src/facelandmarks/facemarkonnx.cpp \
     ../../Src/facelandmarks/facemarkwithpose.cpp \
     ../../Src/facelandmarks/facemark.cpp
+
 
 INCLUDEPATH += ../../Src/facedetector \
                ../../Src/facelandmarks \

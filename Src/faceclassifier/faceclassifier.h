@@ -15,7 +15,8 @@ public:
 
     /*dlib::matrix<dlib::rgb_pixel> cvmat2dlibmatrix(const cv::Mat &_cvmat);*/
 
-    cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
+    // extaract with alignment by eyes line
+    static cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
                              const std::vector<cv::Point2f> &_landmarks,
                              float _targeteyesdistance,
                              const cv::Size &_targetsize,
@@ -25,14 +26,22 @@ public:
                              int _interpolationtype,
                              Mat *rmatrix=nullptr);
 
-    cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
+    // extract with alignment by 5 points
+    static cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
+                             const std::vector<cv::Point2f> &_landmarks,
+                             const cv::Size &_targetsize,
+                             int _interpolationtype,
+                             Mat *rmatrix=nullptr);
+
+    // extract enlarged bbox without alignment
+    static cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
                              const cv::Rect facerect,
                              const cv::Size &_targetsize,
                              float scale,
                              int _interpolationtype);
 
 
-    cv::Rect scale_rect(const cv::Rect &rect, float scale);
+    static cv::Rect scale_rect(const cv::Rect &rect, float scale);
 
     virtual std::vector<float> process(const cv::Mat &img, const std::vector<cv::Point2f> &landmarks, bool fast) = 0;
 
