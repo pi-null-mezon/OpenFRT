@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
                     landmarks = _faces[j];
                     blureness = blurenessdetector->process(frame,landmarks,fast)[0];
                     liveness_score = livenessdetector->process(frame,landmarks,fast)[0];
-                    angles = headposepredictor->process(frame,landmarks,fast);
+                    //angles = headposepredictor->process(frame,landmarks,fast);
                 }
                 // --
                 auto p = rotateclassifier_proxy->process(frame,_bboxes[0],fast);

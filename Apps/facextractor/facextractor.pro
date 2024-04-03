@@ -6,11 +6,13 @@ SOURCES += main.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
-    ../../Src/facelandmarks/facemarkcnn.cpp \
-    ../../Src/facelandmarks/facemark.cpp
+    ../../Src/facelandmarks/facemarkwithpose.cpp \
+    ../../Src/facelandmarks/facemark.cpp \
+    ../../Src/faceclassifier/faceclassifier.cpp
 
 INCLUDEPATH += ../../Src/facedetector \
-               ../../Src/facelandmarks
+               ../../Src/facelandmarks \
+               ../../Src/faceclassifier
 
 include($${PWD}/../../Sharedfiles/opencv.pri)
 include($${PWD}/../../Sharedfiles/dlib.pri)

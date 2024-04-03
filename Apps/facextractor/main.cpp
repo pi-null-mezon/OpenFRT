@@ -9,6 +9,8 @@
 #include "cnnfacedetector.h"
 #include "yunetfacedetector.h"
 #include "facemarkcnn.h"
+#include "facemarkwithpose.h"
+#include "faceclassifier.h"
 
 #include "dlibimgaugment.h"
 #include "opencvimgaugment.h"
@@ -64,12 +66,12 @@ int main(int argc, char *argv[])
         qWarning("You have not specified face detector description filename! Abort...");
         return 4;
     }
-    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
-                                                                                             _cmdparser.get<float>("confthresh"));
-    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
-                                                                                               _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
+                                                                                             _cmdparser.get<float>("confthresh"));*/
+    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
+                                                                                               _cmdparser.get<float>("confthresh"));
+    cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkWithPose::create(_cmdparser.get<std::string>("facelandmarksmodel"));
 
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
@@ -248,7 +250,8 @@ int main(int argc, char *argv[])
                         qInfo("%d) %s - %d face/s found", i, _fileslist.at(i).toUtf8().constData(), static_cast<int>(_faces.size()));
                         const QString filename_woext = _fileslist.at(i).section('.',0,0);
                         for(size_t j = 0; j < qMax(_faces.size(),size_t(1)); ++j) {
-                            const cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                            //const cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(_imgmat,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
+                            const cv::Mat _facepatch = cv::ofrt::FaceClassifier::extractFacePatch(_imgmat,_faces[j],_targetsize,cv::INTER_LINEAR);
                             if(_visualize) {
                                 cv::imshow("Probe",_facepatch);
                                 cv::waitKey(1);
