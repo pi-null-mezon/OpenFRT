@@ -50,7 +50,7 @@ Mat Facemark::extractFace(const Mat &_rgbmat, const std::vector<Point2f> &_landm
     float _scale = _targeteyesdistance / _eyesdistance;
     float _angle = rotate ? 180.0f * static_cast<float>(std::atan(_cd.y/_cd.x) / CV_PI) : 0;
     if(_eyesdistance / _noselength  < 1.0f) { // very high yaw
-        _scale = _targeteyesdistance / (1.4 * _noselength);
+        _scale = _targeteyesdistance / (1.25 * _noselength);
         _angle = 0;
     }
     cv::Point2f _cp = (_rc + _lc)/2.0f;
