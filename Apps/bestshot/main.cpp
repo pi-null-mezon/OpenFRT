@@ -14,6 +14,7 @@
 
 #include "cnnfacedetector.h"
 #include "yunetfacedetector.h"
+#include "yunet2023fd.h"
 #include "facemarkcnn.h"
 #include "facemarklitecnn.h"
 #include "facemarkonnx.h"
@@ -89,9 +90,11 @@ int main(int argc, char *argv[])
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector1 = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
+                                                                                             _cmdparser.get<float>("confthresh"));*/
+    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector2023::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));
-    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
+    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkWithPose::create(_cmdparser.get<std::string>("facelandmarksmodel"));
@@ -275,6 +278,7 @@ int main(int argc, char *argv[])
                 }
                 for(const auto &pt: _faces[j])
                     cv::circle(frame,pt,1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
+                cv::rectangle(frame, _bboxes[j], cv::Scalar(255,255,255), 1, cv::LINE_AA);
             }
         }
 

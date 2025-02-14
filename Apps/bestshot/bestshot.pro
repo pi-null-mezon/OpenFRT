@@ -22,6 +22,7 @@ SOURCES += main.cpp \
     ../../Src/facedetector/cnnfacedetector.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
+    ../../Src/facedetector/yunet2023fd.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
     ../../Src/facelandmarks/facemarklitecnn.cpp \
     ../../Src/facelandmarks/facemarkdlib.cpp \
@@ -47,5 +48,5 @@ HEADERS += \
     ../../Src/faceclassifier/faceliveness.h \
     ../../Src/faceclassifier/headposepredictor.h
 
-DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=64
+DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=96
 
