@@ -38,7 +38,7 @@ const cv::String _options = "{help h               |                        | th
                             "{videofile            |                        | input videofile, if used will be processed instead of inputdir}"
                             "{facedetmodel m       | res10_300x300_ssd_iter_140000_fp16.caffemodel | face detector model                    }"
                             "{facedetdscr d        | deploy_lowres.prototxt | face detector description                                     }"
-                            "{confthresh           | 0.5                    | confidence threshold for the face detector                    }"
+                            "{confthresh           | 0.7                    | confidence threshold for the face detector                    }"
                             "{facelandmarksmodel l | facelandmarks_net.dat  | face landmarks model (68 points)                              }"
                             "{targeteyesdistance   | 60.0                   | target distance between eyes                                  }"
                             "{targetwidth          | 250                    | target image width                                            }"

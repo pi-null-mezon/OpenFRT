@@ -48,5 +48,5 @@ HEADERS += \
     ../../Src/faceclassifier/faceliveness.h \
     ../../Src/faceclassifier/headposepredictor.h
 
-DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=96
+DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=128
 

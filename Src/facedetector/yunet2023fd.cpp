@@ -17,7 +17,7 @@ YuNetFaceDetector2023::YuNetFaceDetector2023(const std::string &_modelfilename, 
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 #endif
     nmsThreshold = 0.3f;
-    topK = 128;
+    topK = 512;
 #ifdef CNN_FACE_DETECTOR_INPUT_SIZE
     inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
     inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
@@ -217,7 +217,7 @@ Mat YuNetFaceDetector2023::resizeAndPasteInCenterOfCanvas(const Mat &_img, const
     if(_targetsize.area() > (_img.rows*_img.cols)) {
         _interptype = cv::INTER_LINEAR;
     }*/
-    static int _interptype = cv::INTER_AREA;
+    static int _interptype = cv::INTER_LINEAR;
     cv::Mat _resizedimg;
     cv::resize(_img,_resizedimg,_targetsize,0,0,_interptype);
 
