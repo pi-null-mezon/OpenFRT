@@ -13,6 +13,7 @@ SOURCES += main.cpp \
     ../../Src/faceclassifier/openeyedetector.cpp \
     ../../Src/faceclassifier/glassesdetector.cpp \
     ../../Src/faceclassifier/faceblur.cpp \
+    ../../Src/faceclassifier/blurenessestimator.cpp \
     ../../Src/faceclassifier/yawndetector.cpp \
     ../../Src/faceclassifier/faceliveness.cpp \
     ../../Src/faceclassifier/faceclassifier.cpp \
@@ -28,7 +29,7 @@ SOURCES += main.cpp \
     ../../Src/facelandmarks/facemarkdlib.cpp \
     ../../Src/facelandmarks/facemarkonnx.cpp \
     ../../Src/facelandmarks/facemarkwithpose.cpp \
-    ../../Src/facelandmarks/facemark.cpp
+    ../../Src/facelandmarks/facemark.cpp \
 
 
 INCLUDEPATH += ../../Src/facedetector \
@@ -42,11 +43,6 @@ unix: {
    target.path = /usr/local/bin
    INSTALLS += target
 }
-
-HEADERS += \
-    ../../Src/faceclassifier/faceblur.h \
-    ../../Src/faceclassifier/faceliveness.h \
-    ../../Src/faceclassifier/headposepredictor.h
 
 DEFINES += CNN_FACE_DETECTOR_INPUT_SIZE=128
 

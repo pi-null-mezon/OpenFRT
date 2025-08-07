@@ -20,6 +20,7 @@
 #include "facemarkonnx.h"
 #include "facebestshot.h"
 #include "faceblur.h"
+#include "blurenessestimator.h"
 #include "yawndetector.h"
 #include "rotateclassifier.h"
 #include "openeyedetector.h"
@@ -111,6 +112,9 @@ int main(int argc, char *argv[])
 
     cv::Ptr<cv::ofrt::FaceClassifier> crfiqaestimator = cv::ofrt::CRFIQAEstimator::createClassifier("/home/alex/Models/CRFIQA/crfiqa_estimator.onnx");
 
+    cv::Ptr<cv::ofrt::FaceClassifier> blurenessestimator = cv::ofrt::BlurenessEstimator::createClassifier("/home/alex/Models/Blur/macroblocks_estimator.onnx");
+    cv::Ptr<cv::ofrt::BlurenessEstimator> blurenessestimator_proxy = blurenessestimator.dynamicCast<cv::ofrt::BlurenessEstimator>();
+
     qInfo("Configuration:");
     const cv::Size _targetsize(_cmdparser.get<int>("targetwidth"),_cmdparser.get<int>("targetheight"));
     float _targeteyesdistance = _cmdparser.get<float>("targeteyesdistance");
@@ -156,8 +160,9 @@ int main(int argc, char *argv[])
     std::mutex mtx;
     std::condition_variable cnd;
     std::vector<cv::Point2f> landmarks;
+    cv::Rect bbox;
     bool blureness_ready;
-    float blureness = 0.0f;
+    float blureness = 0.0f, blureness_v2 = 0.0f;
     bool liveness_ready;
     float liveness_score = 0.0f;
     std::vector<float> angles;
@@ -171,7 +176,8 @@ int main(int argc, char *argv[])
                 cnd.wait(lck, [&](){return ((!blureness_ready && landmarks.size() != 0) || finish);});
                 if(finish)
                     break;
-                blureness = blurenessdetector->process(frame,landmarks,fast)[0];
+                blureness = blurenessdetector->process(frame, landmarks,fast)[0];
+                blureness_v2 = blurenessestimator_proxy->process(frame, landmarks,fast)[0];
                 blureness_ready = true;
                 cnd.notify_all();
             }
@@ -215,6 +221,7 @@ int main(int argc, char *argv[])
                         std::lock_guard<std::mutex> lck(mtx);
                         blureness_ready = false;
                         liveness_ready = false;
+                        bbox = _bboxes[j];
                         landmarks = _faces[j];
                         cnd.notify_all();
                     }
@@ -228,15 +235,12 @@ int main(int argc, char *argv[])
                 } else {
                     landmarks = _faces[j];
                     blureness = blurenessdetector->process(frame,landmarks,fast)[0];
+                    blureness_v2 = blurenessestimator_proxy->process(frame,landmarks,fast)[0];
                     liveness_score = livenessdetector->process(frame,landmarks,fast)[0];
                     //angles = headposepredictor->process(frame,landmarks,fast);
                 }
                 // --
                 auto p = rotateclassifier_proxy->process(frame,_bboxes[0],fast);
-                /*for(size_t i = 0 ; i < p.size(); ++i)
-                    std::cout << p[i] << " ";              
-                std::cout << std::endl;*/
-                // --
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
                 frame_times[frame_times_pos++] = duration_ms;
                 if (frame_times_pos == frame_times.size())
@@ -244,7 +248,7 @@ int main(int argc, char *argv[])
                 if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     //cv::Mat _facepatch = cv::ofrt::FaceClassifier::extractFacePatch(frame,_faces[j],_targetsize,cv::INTER_LINEAR);
-                    std::string info = QString("blureness: %1").arg(QString::number(blureness,'f',2)).toStdString();
+                    std::string info = QString("blureness: %1, v2: %2").arg(QString::number(blureness,'f',2), QString::number(blureness_v2,'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,19), cv::FONT_HERSHEY_SIMPLEX,0.5,blureness < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 

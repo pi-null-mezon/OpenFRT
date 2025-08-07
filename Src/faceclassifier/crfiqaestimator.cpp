@@ -39,7 +39,6 @@ std::vector<float> CRFIQAEstimator::process(const Mat &img, const std::vector<Po
     for(size_t i = 0 ; i < output_blobs[0].total(); ++i)
         score[0] += logits[i]; // crfiqa score
     score[0] /= output_blobs[0].total();
-    score[0] = std::min(std::max(2.5f * score[0] - 0.75f,0.0f),1.0f);
     return score;
 }
 

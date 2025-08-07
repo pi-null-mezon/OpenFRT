@@ -55,10 +55,10 @@ linux {
             -lopencv_dnn \
             -lopencv_calib3d
 
-    cudabackend {
-        DEFINES+=FORCE_OPENCV_DNN_TO_USE_CUDA
-        message('FORCE_OPENCV_DNN_TO_USE_CUDA' defined)
-    }
+    #cudabackend {
+    #    DEFINES+=FORCE_OPENCV_DNN_TO_USE_CUDA
+    #    message('FORCE_OPENCV_DNN_TO_USE_CUDA' defined)
+    #}
 }
 
 DEFINES += OPENCV_DIR=\\\"$${OPENCV_DIR}\\\"
