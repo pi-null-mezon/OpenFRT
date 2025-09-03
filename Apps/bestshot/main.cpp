@@ -29,6 +29,7 @@
 #include "glassesdetector.h"
 #include "facemarkwithpose.h"
 #include "crfiqaestimator.h"
+#include "retinafd.h"
 
 
 const cv::String _options = "{help h               |                        | this help                                                     }"
@@ -88,13 +89,17 @@ int main(int argc, char *argv[])
         qWarning("You have not specified face detector description filename! Abort...");
         return 4;
     }
+
+
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector1 = cv::ofrt::CNNFaceDetector::createDetector(_cmdparser.get<std::string>("facedetdscr"),
                                                                                              _cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));*/
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector2023::createDetector(_cmdparser.get<std::string>("facedetmodel"),
-                                                                                             _cmdparser.get<float>("confthresh"));
+    /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector2023::createDetector(_cmdparser.get<std::string>("facedetmodel"),
+                                                                                             _cmdparser.get<float>("confthresh"));*/
+    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::RetinaFaceDetector::createDetector("/home/alex/Models/FaceDetection/retina_det_10g.onnx",
+                                                                                                _cmdparser.get<float>("confthresh"));
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
@@ -202,8 +207,13 @@ int main(int argc, char *argv[])
         std::vector<std::vector<cv::Point2f>> _faces;
         facelandmarker->fit(frame, _bboxes, _faces);
         std::vector<std::vector<float>> headposes = facelandmarker.dynamicCast<cv::ofrt::FacemarkWithPose>()->last_pose();
+
         /*cv::Ptr<cv::ofrt::YuNetFaceDetector> yunfd = facedetector.dynamicCast<cv::ofrt::YuNetFaceDetector>();
-        const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/      
+        const std::vector<std::vector<cv::Point2f>> _faces = yunfd->detectLandmarks(frame);*/
+
+        cv::Ptr<cv::ofrt::RetinaFaceDetector> proxy = facedetector.dynamicCast<cv::ofrt::RetinaFaceDetector>();
+        _faces = proxy->getLandmarks();
+
         double duration_ms = 1000.0 * (cv::getTickCount() - t0) / cv::getTickFrequency();
         //std::cout << duration_ms << " ms" << std::endl;
         if(_faces.size() != 0) {
@@ -213,7 +223,7 @@ int main(int argc, char *argv[])
                 t0 = cv::getTickCount();
 
                 auto yawprob = yawndetector->process(frame,_faces[j],fast)[0];
-                auto eyesopen = openeyedetector->process(frame,_faces[j],fast)[0];
+                auto eyesopen = openeyedetector->process(frame,_faces[j],fast);
                 auto crfiqa = crfiqaestimator->process(frame,_faces[j],false)[0];
 
                 if(multithreaded) {
@@ -242,9 +252,6 @@ int main(int argc, char *argv[])
                 // --
                 auto p = rotateclassifier_proxy->process(frame,_bboxes[0],fast);
                 duration_ms += 1000.0f * (cv::getTickCount() - t0) / cv::getTickFrequency();
-                frame_times[frame_times_pos++] = duration_ms;
-                if (frame_times_pos == frame_times.size())
-                    frame_times_pos = 0;
                 if((blureness < max_blur) && (std::abs(*std::max_element(angles.begin(),angles.end())) < max_angle)) {
                     cv::Mat _facepatch = cv::ofrt::Facemark::extractFace(frame,_faces[j],_targeteyesdistance,_targetsize,h2wshift,v2hshift,rotate);
                     //cv::Mat _facepatch = cv::ofrt::FaceClassifier::extractFacePatch(frame,_faces[j],_targetsize,cv::INTER_LINEAR);
@@ -270,21 +277,32 @@ int main(int argc, char *argv[])
                     cv::putText(_facepatch,info,cv::Point(20,120), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
                     cv::putText(_facepatch,info,cv::Point(19,119), cv::FONT_HERSHEY_SIMPLEX,0.5, yawprob < 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
-                    info = QString("openeyes:  %1").arg(QString::number(eyesopen,'f',2)).toStdString();
+                    info = QString("right eye open:  %1").arg(QString::number(eyesopen[0],'f',2)).toStdString();
                     cv::putText(_facepatch,info,cv::Point(20,140), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
-                    cv::putText(_facepatch,info,cv::Point(19,139), cv::FONT_HERSHEY_SIMPLEX,0.5, eyesopen > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,139), cv::FONT_HERSHEY_SIMPLEX,0.5, eyesopen[0] > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+                    info = QString("left eye open:  %1").arg(QString::number(eyesopen[1],'f',2)).toStdString();
+                    cv::putText(_facepatch,info,cv::Point(20,160), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,159), cv::FONT_HERSHEY_SIMPLEX,0.5, eyesopen[1] > 0.5 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
                     info = QString("CRFIQA:  %1").arg(QString::number(crfiqa,'f',2)).toStdString();
-                    cv::putText(_facepatch,info,cv::Point(20,160), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
-                    cv::putText(_facepatch,info,cv::Point(19,159), cv::FONT_HERSHEY_SIMPLEX,0.5, crfiqa > 0.525 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(20,180), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(_facepatch,info,cv::Point(19,179), cv::FONT_HERSHEY_SIMPLEX,0.5, crfiqa > 0.525 ? cv::Scalar(0,255,0) : cv::Scalar(0,0,255),1,cv::LINE_AA);
 
                     cv::imshow(std::string("bestshot_") + std::to_string(j), _facepatch);
                 }
-                for(const auto &pt: _faces[j])
-                    cv::circle(frame,pt,1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
+                for(size_t k =0; k < _faces[j].size(); ++k) {
+                    cv::circle(frame,_faces[j][k],1,cv::Scalar(0,255,0),-1,cv::LINE_AA);
+                    std::string info = QString::number(k).toStdString();
+                    cv::putText(frame,info,_faces[j][k] + cv::Point2f(4,-4), cv::FONT_HERSHEY_SIMPLEX,0.3,cv::Scalar(0),1,cv::LINE_AA);
+                    cv::putText(frame,info,_faces[j][k] + cv::Point2f(3,-3), cv::FONT_HERSHEY_SIMPLEX,0.3, cv::Scalar(0,0,255),1,cv::LINE_AA);
+                }
                 cv::rectangle(frame, _bboxes[j], cv::Scalar(255,255,255), 1, cv::LINE_AA);
             }
         }
+
+        frame_times[frame_times_pos++] = duration_ms;
+        if(frame_times_pos == frame_times.size())
+            frame_times_pos = 0;
 
         const std::string info = QString("frame processing time: %1 ms").arg(QString::number(average(frame_times),'f',1)).toStdString();
         cv::putText(frame,info,cv::Point(20,20), cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(0),1,cv::LINE_AA);

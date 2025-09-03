@@ -45,12 +45,12 @@ float FaceClassifier::v2hshift() const
 }*/
 
 cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype, cv::Mat *rmatrix)
-{ 
-    static uint8_t _reye[] = {36,37,38,39,40,41};
-    static uint8_t _leye[] = {42,43,44,45,46,47};
+{  
     cv::Mat _patch;
     cv::Point2f _rc(0,0), _lc(0,0), nose(0,0);
     if(_landmarks.size() == 68) {
+        static uint8_t _reye[] = {36,37,38,39,40,41};
+        static uint8_t _leye[] = {42,43,44,45,46,47};
         int _len = sizeof(_reye)/sizeof(_reye[0]);
         for(int i = 0; i < _len; ++i) {
             _rc += _landmarks[_reye[i]];
@@ -101,7 +101,7 @@ Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const std::vector<Point
         from[3] = _landmarks[60];
         from[4] = _landmarks[64];
     } else if (_landmarks.size() == 5) {
-        from[0] = _landmarks[0];
+        from = _landmarks;
     }
     std::vector<cv::Point2f> to = {cv::Point2f(30.2946, 51.6963),
                                    cv::Point2f(65.5318, 51.5014),

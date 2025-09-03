@@ -27,6 +27,7 @@ YuNetFaceDetector2023::YuNetFaceDetector2023(const std::string &_modelfilename, 
 #endif
     padW = (int((inputW - 1) / divisor) + 1) * divisor;
     padH = (int((inputH - 1) / divisor) + 1) * divisor;
+    output_names = { "cls_8", "cls_16", "cls_32", "obj_8", "obj_16", "obj_32", "bbox_8", "bbox_16", "bbox_32", "kps_8", "kps_16", "kps_32" };
 }
 
 YuNetFaceDetector2023::~YuNetFaceDetector2023()
@@ -41,7 +42,6 @@ std::vector<Rect> YuNetFaceDetector2023::detectFaces(InputArray &_img) const
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
     cv::Mat input_blob = dnn::blobFromImage(_fixedcanvasimg);
     // Forward
-    std::vector<String> output_names = { "cls_8", "cls_16", "cls_32", "obj_8", "obj_16", "obj_32", "bbox_8", "bbox_16", "bbox_32", "kps_8", "kps_16", "kps_32" };
     std::vector<Mat> output_blobs;
     net.setInput(input_blob);
     net.forward(output_blobs, output_names);
@@ -71,7 +71,6 @@ std::vector<std::vector<Point2f>> YuNetFaceDetector2023::detectLandmarks(InputAr
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
     cv::Mat input_blob = dnn::blobFromImage(_fixedcanvasimg);
     // Forward
-    std::vector<String> output_names = { "cls_8", "cls_16", "cls_32", "obj_8", "obj_16", "obj_32", "bbox_8", "bbox_16", "bbox_32", "kps_8", "kps_16", "kps_32" };
     std::vector<Mat> output_blobs;
     net.setInput(input_blob);
     net.forward(output_blobs, output_names);

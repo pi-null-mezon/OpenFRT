@@ -61,10 +61,10 @@ std::vector<cv::Mat> OpenEyeDetector::extractEyesPatches(const cv::Mat &_rgbmat,
 {
     std::vector<cv::Mat> patches;
     patches.reserve(2);
+    cv::Point2f rc(0,0), lc(0,0);
     if(_landmarks.size() == 68) {
         static const uint8_t reye[] = {36,37,38,39,40,41};
         static const uint8_t leye[] = {42,43,44,45,46,47};
-        cv::Point2f rc(0,0), lc(0,0);
         int len = sizeof(reye)/sizeof(reye[0]);
         for(int i = 0; i < len; ++i) {
             rc += _landmarks[reye[i]];
@@ -72,36 +72,39 @@ std::vector<cv::Mat> OpenEyeDetector::extractEyesPatches(const cv::Mat &_rgbmat,
         }
         rc /= len;
         lc /= len;
-
-        cv::Point2f cd = lc - rc;
-        float _eyesdistance = std::sqrt((cd.x)*(cd.x) + (cd.y)*(cd.y));
-        float _scale = _targeteyesdistance / _eyesdistance;
-        float _angle = 180.0f * static_cast<float>(std::atan(cd.y/cd.x) / CV_PI);
-        cv::Point2f _cp = (rc + lc)/2.0f;
-        cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
-        _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x;
-        _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y;
-
-        int _interpolationtype = cv::INTER_LINEAR;
-        if(_scale < 1.0f)
-            _interpolationtype = cv::INTER_AREA;
-        cv::Mat _normalizedfaceimg;
-        cv::warpAffine(_rgbmat,_normalizedfaceimg,_tm,_targetsize,_interpolationtype);
-        const cv::Rect imgrect(0,0,_normalizedfaceimg.cols,_normalizedfaceimg.rows);
-        // We should calculate center points in the new CS
-        cv::Point2d nrc(rc.x*_tm.at<double>(0,0) + rc.y*_tm.at<double>(0,1) + _tm.at<double>(0,2),
-                         rc.x*_tm.at<double>(1,0) + rc.y*_tm.at<double>(1,1) + _tm.at<double>(1,2));
-        cv::Point2d nlc(lc.x*_tm.at<double>(0,0) + lc.y*_tm.at<double>(0,1) + _tm.at<double>(0,2),
-                         lc.x*_tm.at<double>(1,0) + lc.y*_tm.at<double>(1,1) + _tm.at<double>(1,2));
-
-        cv::RotatedRect rotatedrect(nrc,cv::Size(_targetsize.width/5,_targetsize.width/5),0);
-        cv::Rect roirect = rotatedrect.boundingRect() & imgrect;
-        patches.push_back(_normalizedfaceimg(roirect));
-
-        rotatedrect.center = nlc;
-        roirect = rotatedrect.boundingRect() & imgrect;
-        patches.push_back(_normalizedfaceimg(roirect));
+    } else if (_landmarks.size() == 5) {
+        rc = _landmarks[0];
+        lc = _landmarks[1];
     }
+
+    cv::Point2f cd = lc - rc;
+    float _eyesdistance = std::sqrt((cd.x)*(cd.x) + (cd.y)*(cd.y));
+    float _scale = _targeteyesdistance / _eyesdistance;
+    float _angle = 180.0f * static_cast<float>(std::atan(cd.y/cd.x) / CV_PI);
+    cv::Point2f _cp = (rc + lc)/2.0f;
+    cv::Mat _tm = cv::getRotationMatrix2D(_cp,_angle,_scale);
+    _tm.at<double>(0,2) += _targetsize.width/2.0 - _cp.x;
+    _tm.at<double>(1,2) += _targetsize.height/2.0 - _cp.y;
+
+    int _interpolationtype = cv::INTER_LINEAR;
+    if(_scale < 1.0f)
+        _interpolationtype = cv::INTER_AREA;
+    cv::Mat _normalizedfaceimg;
+    cv::warpAffine(_rgbmat,_normalizedfaceimg,_tm,_targetsize,_interpolationtype);
+    const cv::Rect imgrect(0,0,_normalizedfaceimg.cols,_normalizedfaceimg.rows);
+    // We should calculate center points in the new CS
+    cv::Point2d nrc(rc.x*_tm.at<double>(0,0) + rc.y*_tm.at<double>(0,1) + _tm.at<double>(0,2),
+                     rc.x*_tm.at<double>(1,0) + rc.y*_tm.at<double>(1,1) + _tm.at<double>(1,2));
+    cv::Point2d nlc(lc.x*_tm.at<double>(0,0) + lc.y*_tm.at<double>(0,1) + _tm.at<double>(0,2),
+                     lc.x*_tm.at<double>(1,0) + lc.y*_tm.at<double>(1,1) + _tm.at<double>(1,2));
+
+    cv::RotatedRect rotatedrect(nrc,cv::Size(_targetsize.width/5,_targetsize.width/5),0);
+    cv::Rect roirect = rotatedrect.boundingRect() & imgrect;
+    patches.push_back(_normalizedfaceimg(roirect));
+
+    rotatedrect.center = nlc;
+    roirect = rotatedrect.boundingRect() & imgrect;
+    patches.push_back(_normalizedfaceimg(roirect));
     return patches;
 }
 

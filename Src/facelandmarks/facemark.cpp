@@ -1,5 +1,7 @@
 #include "facemark.h"
 
+#include <iostream>
+
 namespace cv { namespace ofrt {
 
 Facemark::Facemark()

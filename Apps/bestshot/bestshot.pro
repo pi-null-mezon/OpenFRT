@@ -24,6 +24,7 @@ SOURCES += main.cpp \
     ../../Src/facedetector/yunetfacedetector.cpp \
     ../../Src/facedetector/facedetector.cpp \
     ../../Src/facedetector/yunet2023fd.cpp \
+    ../../Src/facedetector/retinafd.cpp \
     ../../Src/facelandmarks/facemarkcnn.cpp \
     ../../Src/facelandmarks/facemarklitecnn.cpp \
     ../../Src/facelandmarks/facemarkdlib.cpp \

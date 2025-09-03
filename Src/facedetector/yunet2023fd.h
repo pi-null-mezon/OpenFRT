@@ -33,6 +33,7 @@ private:
     const std::vector<int> strides;
     float nmsThreshold;
     int topK;
+    std::vector<String> output_names;
     mutable cv::dnn::Net net;
 };
 
