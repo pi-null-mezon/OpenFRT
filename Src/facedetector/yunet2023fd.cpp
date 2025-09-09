@@ -18,10 +18,6 @@ YuNetFaceDetector2023::YuNetFaceDetector2023(int _inputW, int _inputH, const std
 #endif
     nmsThreshold = 0.3f;
     topK = 512;
-#ifdef CNN_FACE_DETECTOR_INPUT_SIZE
-    inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
-    inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
-#endif
     padW = (int((inputW() - 1) / divisor) + 1) * divisor;
     padH = (int((inputH() - 1) / divisor) + 1) * divisor;
     output_names = { "cls_8", "cls_16", "cls_32", "obj_8", "obj_16", "obj_32", "bbox_8", "bbox_16", "bbox_32", "kps_8", "kps_16", "kps_32" };
