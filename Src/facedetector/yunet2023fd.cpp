@@ -4,8 +4,8 @@
 
 namespace cv { namespace ofrt {
 
-YuNetFaceDetector2023::YuNetFaceDetector2023(const std::string &_modelfilename, float _scoreThreshold) :
-    FaceDetector(),
+YuNetFaceDetector2023::YuNetFaceDetector2023(int _inputW, int _inputH, const std::string &_modelfilename, float _scoreThreshold) :
+    FaceDetector(_inputW,_inputH),
     scoreThreshold(_scoreThreshold),
     divisor(32),
     strides({8, 16, 32})
@@ -21,12 +21,9 @@ YuNetFaceDetector2023::YuNetFaceDetector2023(const std::string &_modelfilename, 
 #ifdef CNN_FACE_DETECTOR_INPUT_SIZE
     inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
     inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
-#else
-    inputW = 64;
-    inputH = 64;
 #endif
-    padW = (int((inputW - 1) / divisor) + 1) * divisor;
-    padH = (int((inputH - 1) / divisor) + 1) * divisor;
+    padW = (int((inputW() - 1) / divisor) + 1) * divisor;
+    padH = (int((inputH() - 1) / divisor) + 1) * divisor;
     output_names = { "cls_8", "cls_16", "cls_32", "obj_8", "obj_16", "obj_32", "bbox_8", "bbox_16", "bbox_32", "kps_8", "kps_16", "kps_32" };
 }
 
@@ -36,7 +33,7 @@ YuNetFaceDetector2023::~YuNetFaceDetector2023()
 
 std::vector<Rect> YuNetFaceDetector2023::detectFaces(InputArray &_img) const
 {
-    cv::Size _targetsize(inputW,inputH);
+    cv::Size _targetsize(inputW(),inputH());
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
@@ -65,7 +62,7 @@ std::vector<Rect> YuNetFaceDetector2023::detectFaces(InputArray &_img) const
 
 std::vector<std::vector<Point2f>> YuNetFaceDetector2023::detectLandmarks(InputArray &_img) const
 {
-    cv::Size _targetsize(inputW,inputH);
+    cv::Size _targetsize(inputW(),inputH());
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
@@ -229,9 +226,9 @@ Mat YuNetFaceDetector2023::resizeAndPasteInCenterOfCanvas(const Mat &_img, const
     return _canvasmat;
 }
 
-Ptr<FaceDetector> YuNetFaceDetector2023::createDetector(const std::string &_modelfilename, float _confidenceThreshold)
+Ptr<FaceDetector> YuNetFaceDetector2023::create(const std::string &_modelfilename, int _inputW, int _inputH, float _confidenceThreshold)
 {
-    return makePtr<YuNetFaceDetector2023>(_modelfilename,_confidenceThreshold);
+    return makePtr<YuNetFaceDetector2023>(_inputW, _inputH, _modelfilename,_confidenceThreshold);
 }
 
 

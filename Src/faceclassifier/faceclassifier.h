@@ -26,11 +26,13 @@ public:
                              int _interpolationtype,
                              Mat *rmatrix=nullptr);
 
+    enum SimilarityTransformMethod {SVD, Partial2D};
     // extract with alignment by 5 points
     static cv::Mat extractFacePatch(const cv::Mat &_rgbmat,
                              const std::vector<cv::Point2f> &_landmarks,
                              const cv::Size &_targetsize,
                              int _interpolationtype,
+                             SimilarityTransformMethod method=SVD,
                              Mat *rmatrix=nullptr);
 
     // extract enlarged bbox without alignment
@@ -48,6 +50,8 @@ public:
     static std::vector<float> softmax(const std::vector<float> &logits);
 
     static std::vector<float> softmax(const float *logits, unsigned long size);
+
+    static cv::Mat estimateSimilarityTransform(const std::vector<cv::Point2f>& src, const std::vector<cv::Point2f>& dst);
 
     const cv::Size size() const;
 

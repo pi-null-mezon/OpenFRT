@@ -14,12 +14,12 @@ namespace cv { namespace ofrt {
 class YuNetFaceDetector2023: public FaceDetector
 {
 public:
-    YuNetFaceDetector2023(const std::string &_modelfilename, float _scoreThreshold);
+    YuNetFaceDetector2023(int _inputW, int _inputH, const std::string &_modelfilename, float _scoreThreshold);
     virtual ~YuNetFaceDetector2023();
     std::vector<cv::Rect> detectFaces(InputArray &_img) const override;
     std::vector<std::vector<cv::Point2f>> detectLandmarks(InputArray &_img) const;
-    static Ptr<FaceDetector> createDetector(const std::string &_modelfilename="./face_detection_yunet_2023mar.onnx",
-                                            float _confidenceThreshold=0.9f);
+    static Ptr<FaceDetector> create(const std::string &_modelfilename="./face_detection_yunet_2023mar.onnx",
+                                    int _inputW=64, int _inputH=64, float _confidenceThreshold=0.9f);
 
 private:
     cv::Mat postProcess(const std::vector<cv::Mat>& output_blobs) const;
@@ -27,8 +27,6 @@ private:
     cv::Mat resizeAndPasteInCenterOfCanvas(const cv::Mat &_img, const cv::Size &_canvassize, cv::Point2f &_originshift, float &_scaleX, float &_scaleY) const;
 
     float scoreThreshold;
-    int inputW;
-    int inputH;
     int divisor, padW, padH;
     const std::vector<int> strides;
     float nmsThreshold;

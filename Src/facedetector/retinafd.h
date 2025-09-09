@@ -7,18 +7,15 @@
 
 namespace cv { namespace ofrt {
 
-/**
- * @brief The YuNet Face Detector update
- * Network weights:     https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet
- */
 class RetinaFaceDetector: public FaceDetector
 {
 public:
-    RetinaFaceDetector(const std::string &_modelfilename, float _scoreThreshold);
+    RetinaFaceDetector(int _inputW, int _inputH, const std::string &_modelfilename, float _scoreThreshold);
     virtual ~RetinaFaceDetector();
     std::vector<cv::Rect> detectFaces(InputArray &_img) const override;
     std::vector<std::vector<cv::Point2f>> getLandmarks() const;
-    static Ptr<FaceDetector> createDetector(const std::string &_modelfilename="./retina_det_10g.onnx", float _confidenceThreshold=0.5f);
+    static Ptr<FaceDetector> create(const std::string &_modelfilename="./retina_det_10g.onnx",
+                                            int _inputW=160, int _inputH=160, float _confidenceThreshold=0.5f);
 
 private:
     std::vector<Mat> precomputeAnchorCenters() const;
@@ -28,8 +25,6 @@ private:
     cv::Mat resizeAndPasteInCenterOfCanvas(const cv::Mat &_img, const cv::Size &_canvassize, cv::Point2f &_originshift, float &_scaleX, float &_scaleY) const;
 
     float scoreThreshold;
-    int inputW;
-    int inputH;
     int fmc;
     const std::vector<int> feat_stride_fpn;
     int num_anchors;

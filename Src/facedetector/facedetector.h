@@ -11,7 +11,7 @@ namespace cv { namespace ofrt {
 class FaceDetector
 {
 public:
-    FaceDetector();
+    FaceDetector(int _inputW, int _inputH);
     virtual ~FaceDetector();
     /**
      * @brief detectFaces - should return bounding boxes for all faces detected on image
@@ -32,6 +32,8 @@ public:
      */
     void setShifts(float _xshift, float _yshift);
 
+    int inputW() const;
+    int inputH() const;
     float getXPortion() const;
     float getYPortion() const;
     float getXShift() const;
@@ -40,6 +42,8 @@ public:
     static void sortByArea(std::vector<Rect> &rects, bool descending=true);
 
 private:
+    int iW;
+    int iH;
     float xPortion;
     float yPortion;
     float xShift;

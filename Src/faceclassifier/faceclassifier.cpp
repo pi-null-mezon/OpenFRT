@@ -44,6 +44,52 @@ float FaceClassifier::v2hshift() const
     return _img;
 }*/
 
+
+cv::Mat FaceClassifier::estimateSimilarityTransform(const std::vector<cv::Point2f>& src, const std::vector<cv::Point2f>& dst) {
+    int n = src.size();
+
+    cv::Mat A(2 * n, 4, CV_32F);
+    cv::Mat B(2 * n, 1, CV_32F);
+
+    for (int i = 0; i < n; i++) {
+        // For x' equation
+        A.at<float>(2 * i, 0) = src[i].x;      // a coefficient
+        A.at<float>(2 * i, 1) = -src[i].y;     // b coefficient
+        A.at<float>(2 * i, 2) = 1.0f;          // tx coefficient
+        A.at<float>(2 * i, 3) = 0.0f;          // ty coefficient
+        B.at<float>(2 * i, 0) = dst[i].x;
+
+        // For y' equation
+        A.at<float>(2 * i + 1, 0) = src[i].y;  // a coefficient
+        A.at<float>(2 * i + 1, 1) = src[i].x;  // b coefficient
+        A.at<float>(2 * i + 1, 2) = 0.0f;       // tx coefficient
+        A.at<float>(2 * i + 1, 3) = 1.0f;       // ty coefficient
+        B.at<float>(2 * i + 1, 0) = dst[i].y;
+    }
+
+    // Solve the least squares problem: A * params = B
+    cv::Mat params;
+    cv::solve(A, B, params, cv::DECOMP_SVD);
+
+    // Extract parameters
+    float a = params.at<float>(0, 0);
+    float b = params.at<float>(1, 0);
+    float tx = params.at<float>(2, 0);
+    float ty = params.at<float>(3, 0);
+
+    // Create the transformation matrix
+    cv::Mat transformation(2, 3, CV_32F);
+    transformation.at<float>(0, 0) = a;
+    transformation.at<float>(0, 1) = -b;
+    transformation.at<float>(0, 2) = tx;
+    transformation.at<float>(1, 0) = b;
+    transformation.at<float>(1, 1) = a;
+    transformation.at<float>(1, 2) = ty;
+
+    return transformation;
+}
+
+
 cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vector<cv::Point2f> &_landmarks, float _targeteyesdistance, const cv::Size &_targetsize, float h2wshift, float v2hshift, bool rotate, int _interpolationtype, cv::Mat *rmatrix)
 {  
     cv::Mat _patch;
@@ -83,7 +129,7 @@ cv::Mat FaceClassifier::extractFacePatch(const cv::Mat &_rgbmat, const std::vect
     return _patch;
 }
 
-Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const std::vector<Point2f> &_landmarks, const Size &_targetsize, int _interpolationtype, Mat *rmatrix)
+Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const std::vector<Point2f> &_landmarks, const Size &_targetsize, int _interpolationtype, SimilarityTransformMethod method, Mat *rmatrix)
 {
     std::vector<cv::Point2f> from;
     if(_landmarks.size() == 68) {
@@ -113,7 +159,15 @@ Mat FaceClassifier::extractFacePatch(const Mat &_rgbmat, const std::vector<Point
     for(size_t i = 0; i < to.size(); ++i)
         to[i] = cv::Point2f(to[i].x*scale_x, to[i].y*scale_y);
 
-    cv::Mat tm = cv::estimateAffinePartial2D(from, to, cv::noArray(), cv::LMEDS);
+    cv::Mat tm;
+    switch (method) {
+        case SVD:
+            tm = estimateSimilarityTransform(from, to);
+        break;
+        default:
+            tm = cv::estimateAffinePartial2D(from, to, cv::noArray(), cv::LMEDS);
+        break;
+    }
     if(rmatrix != nullptr)
         *rmatrix = tm;
 

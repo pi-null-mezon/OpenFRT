@@ -2,7 +2,9 @@
 
 namespace cv { namespace ofrt {
 
-FaceDetector::FaceDetector() :
+FaceDetector::FaceDetector(int _inputW, int _inputH) :
+    iW(_inputW),
+    iH(_inputH),
     xPortion(1),
     yPortion(1),
     xShift(0),
@@ -24,6 +26,16 @@ void FaceDetector::setShifts(float _xshift, float _yshift)
 {
     xShift = _xshift;
     yShift = _yshift;
+}
+
+int FaceDetector::inputW() const
+{
+    return iW;
+}
+
+int FaceDetector::inputH() const
+{
+    return iH;
 }
 
 float FaceDetector::getXPortion() const

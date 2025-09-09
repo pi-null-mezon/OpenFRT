@@ -4,8 +4,8 @@
 
 namespace cv { namespace ofrt {
 
-RetinaFaceDetector::RetinaFaceDetector(const std::string &_modelfilename, float _scoreThreshold) :
-    FaceDetector(),
+RetinaFaceDetector::RetinaFaceDetector(int _inputW, int _inputH, const std::string &_modelfilename, float _scoreThreshold) :
+    FaceDetector(_inputW,_inputH),
     scoreThreshold(_scoreThreshold),
     fmc(3),
     feat_stride_fpn({8, 16, 32}),
@@ -22,9 +22,6 @@ RetinaFaceDetector::RetinaFaceDetector(const std::string &_modelfilename, float 
 #ifdef CNN_FACE_DETECTOR_INPUT_SIZE
     inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
     inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
-#else
-    inputW = 160;
-    inputH = 160;
 #endif
     output_names = {"448","471","494","451","474","497","454","477","500"};
     anchorCenters = precomputeAnchorCenters();
@@ -34,10 +31,9 @@ RetinaFaceDetector::~RetinaFaceDetector()
 {
 }
 
-
 std::vector<Rect> RetinaFaceDetector::detectFaces(InputArray &_img) const
 {
-    cv::Size _targetsize(inputW,inputH);
+    cv::Size _targetsize(inputW(),inputH());
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
@@ -122,7 +118,7 @@ cv::Mat create_anchor_centers(int height, int width, float stride, int num_ancho
 std::vector<Mat> RetinaFaceDetector::precomputeAnchorCenters() const {
     std::vector<Mat> _anchorCenters;
     for (int stride : feat_stride_fpn)
-        _anchorCenters.push_back(create_anchor_centers(inputH / stride, inputW / stride, stride, num_anchors));
+        _anchorCenters.push_back(create_anchor_centers(inputH() / stride, inputW() / stride, stride, num_anchors));
     return _anchorCenters;
 }
 
@@ -133,10 +129,10 @@ cv::Mat RetinaFaceDetector::distance2bbox(const Mat& points, const Mat& distance
     Mat x2 = points.col(0) + distance.col(2);
     Mat y2 = points.col(1) + distance.col(3);
     // Clip to image boundaries
-    x1 = max(0, min(x1, inputW));
-    y1 = max(0, min(y1, inputH));
-    x2 = max(0, min(x2, inputW));
-    y2 = max(0, min(y2, inputH));
+    x1 = max(0, min(x1, inputW()));
+    y1 = max(0, min(y1, inputH()));
+    x2 = max(0, min(x2, inputW()));
+    y2 = max(0, min(y2, inputH()));
     Mat bboxes;
     hconcat(std::vector<Mat>{x1, y1, x2, y2}, bboxes);
     return bboxes;
@@ -149,8 +145,8 @@ Mat RetinaFaceDetector::distance2kps(const Mat& points, const Mat& distance) con
         Mat px = points.col(i % 2) + distance.col(i);
         Mat py = points.col(i % 2 + 1) + distance.col(i + 1);
         // Clip to image boundaries
-        px = max(0, min(px, inputW));
-        py = max(0, min(py, inputH));
+        px = max(0, min(px, inputW()));
+        py = max(0, min(py, inputH()));
         preds.push_back(px);
         preds.push_back(py);
     }
@@ -275,9 +271,9 @@ Mat RetinaFaceDetector::resizeAndPasteInCenterOfCanvas(const Mat &_img, const Si
     return _canvasmat;
 }
 
-Ptr<FaceDetector> RetinaFaceDetector::createDetector(const std::string &_modelfilename, float _confidenceThreshold)
+Ptr<FaceDetector> RetinaFaceDetector::create(const std::string &_modelfilename, int _inputW, int _inputH, float _confidenceThreshold)
 {
-    return makePtr<RetinaFaceDetector>(_modelfilename,_confidenceThreshold);
+    return makePtr<RetinaFaceDetector>(_inputW,_inputH,_modelfilename,_confidenceThreshold);
 }
 
 
