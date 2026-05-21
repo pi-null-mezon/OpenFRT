@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
                                                                                              _cmdparser.get<float>("confthresh"));*/
     /*cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::YuNetFaceDetector2023::createDetector(_cmdparser.get<std::string>("facedetmodel"),
                                                                                              _cmdparser.get<float>("confthresh"));*/
-    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::RetinaFaceDetector::createDetector("/home/alex/Models/FaceDetection/retina_det_10g.onnx",
+    cv::Ptr<cv::ofrt::FaceDetector> facedetector = cv::ofrt::RetinaFaceDetector::create("/home/alex/Models/FaceDetection/retina_det_10g.onnx",
                                                                                                 _cmdparser.get<float>("confthresh"));
-    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));
+    /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkLiteCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkCNN::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     /*cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkONNX::create(_cmdparser.get<std::string>("facelandmarksmodel"));*/
     cv::Ptr<cv::ofrt::Facemark> facelandmarker = cv::ofrt::FacemarkWithPose::create(_cmdparser.get<std::string>("facelandmarksmodel"));

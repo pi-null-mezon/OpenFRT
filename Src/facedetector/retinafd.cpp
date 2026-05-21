@@ -19,10 +19,6 @@ RetinaFaceDetector::RetinaFaceDetector(int _inputW, int _inputH, const std::stri
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 #endif
-#ifdef CNN_FACE_DETECTOR_INPUT_SIZE
-    inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
-    inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
-#endif
     output_names = {"448","471","494","451","474","497","454","477","500"};
     anchorCenters = precomputeAnchorCenters();
 }

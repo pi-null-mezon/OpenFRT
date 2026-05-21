@@ -30,8 +30,6 @@ private:
     cv::Mat resizeAndPasteInCenterOfCanvas(const cv::Mat &_img, const cv::Size &_canvassize, cv::Point2f &_originshift, float &_scaleX, float &_scaleY) const;
 
     float scoreThreshold;
-    int inputW;
-    int inputH;
     float nmsThreshold;
     int topK;
     mutable cv::dnn::Net net;

@@ -5,7 +5,11 @@
 namespace cv { namespace ofrt {
 
 YuNetFaceDetector::YuNetFaceDetector(const std::string &_modelfilename, float _scoreThreshold) :
-    FaceDetector(),
+#ifdef CNN_FACE_DETECTOR_INPUT_SIZE
+    FaceDetector(CNN_FACE_DETECTOR_INPUT_SIZE, CNN_FACE_DETECTOR_INPUT_SIZE),
+#else
+    FaceDetector(64,64),
+#endif
     scoreThreshold(_scoreThreshold)
 {
     net = cv::dnn::readNet(_modelfilename);
@@ -15,14 +19,7 @@ YuNetFaceDetector::YuNetFaceDetector(const std::string &_modelfilename, float _s
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
 #endif
     nmsThreshold = 0.3f;
-    topK = 5000;
-#ifdef CNN_FACE_DETECTOR_INPUT_SIZE
-    inputW = CNN_FACE_DETECTOR_INPUT_SIZE;
-    inputH = CNN_FACE_DETECTOR_INPUT_SIZE;
-#else
-    inputW = 64;
-    inputH = 64;
-#endif
+    topK = 128;
     generatePriors();
 }
 
@@ -32,7 +29,7 @@ YuNetFaceDetector::~YuNetFaceDetector()
 
 std::vector<Rect> YuNetFaceDetector::detectFaces(InputArray &_img) const
 {
-    cv::Size _targetsize(inputW,inputH);
+    cv::Size _targetsize(inputW(),inputH());
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
@@ -60,7 +57,7 @@ std::vector<Rect> YuNetFaceDetector::detectFaces(InputArray &_img) const
 
 std::vector<std::vector<Point2f>> YuNetFaceDetector::detectLandmarks(InputArray &_img) const
 {
-    cv::Size _targetsize(inputW,inputH);
+    cv::Size _targetsize(inputW(),inputH());
     float _sX,_sY;
     cv::Point2f _oshift;
     cv::Mat _fixedcanvasimg = resizeAndPasteInCenterOfCanvas(_img.getMat(),_targetsize,_oshift,_sX,_sY);
@@ -94,7 +91,7 @@ void YuNetFaceDetector::generatePriors()
 {
     // Calculate shapes of different scales according to the shape of input image
     Size feature_map_2nd = {
-        int(int((inputW+1)/2)/2), int(int((inputH+1)/2)/2)
+        int(int((inputW()+1)/2)/2), int(int((inputH()+1)/2)/2)
     };
     Size feature_map_3rd = {
         int(feature_map_2nd.width/2), int(feature_map_2nd.height/2)
@@ -138,11 +135,11 @@ void YuNetFaceDetector::generatePriors()
             {
                 for (size_t j = 0; j < min_size.size(); ++j)
                 {
-                    float s_kx = min_size[j] / inputW;
-                    float s_ky = min_size[j] / inputH;
+                    float s_kx = min_size[j] / inputW();
+                    float s_ky = min_size[j] / inputH();
 
-                    float cx = (_w + 0.5f) * steps[i] / inputW;
-                    float cy = (_h + 0.5f) * steps[i] / inputH;
+                    float cx = (_w + 0.5f) * steps[i] / inputW();
+                    float cy = (_h + 0.5f) * steps[i] / inputH();
 
                     Rect2f prior = { cx, cy, s_kx, s_ky };
                     priors.push_back(prior);
@@ -186,10 +183,10 @@ Mat YuNetFaceDetector::postProcess(const std::vector<Mat>& output_blobs) const
         face.at<float>(0, 14) = score;
 
         // Get bounding box
-        float cx = (priors[i].x + loc_v[i*14+0] * variance[0] * priors[i].width)  * inputW;
-        float cy = (priors[i].y + loc_v[i*14+1] * variance[0] * priors[i].height) * inputH;
-        float w  = priors[i].width  * exp(loc_v[i*14+2] * variance[0]) * inputW;
-        float h  = priors[i].height * exp(loc_v[i*14+3] * variance[1]) * inputH;
+        float cx = (priors[i].x + loc_v[i*14+0] * variance[0] * priors[i].width)  * inputW();
+        float cy = (priors[i].y + loc_v[i*14+1] * variance[0] * priors[i].height) * inputH();
+        float w  = priors[i].width  * exp(loc_v[i*14+2] * variance[0]) * inputW();
+        float h  = priors[i].height * exp(loc_v[i*14+3] * variance[1]) * inputH();
         float x1 = cx - w / 2;
         float y1 = cy - h / 2;
         face.at<float>(0, 0) = x1;
@@ -198,16 +195,16 @@ Mat YuNetFaceDetector::postProcess(const std::vector<Mat>& output_blobs) const
         face.at<float>(0, 3) = h;
 
         // Get landmarks
-        face.at<float>(0, 4) = (priors[i].x + loc_v[i*14+ 4] * variance[0] * priors[i].width)  * inputW;  // right eye, x
-        face.at<float>(0, 5) = (priors[i].y + loc_v[i*14+ 5] * variance[0] * priors[i].height) * inputH;  // right eye, y
-        face.at<float>(0, 6) = (priors[i].x + loc_v[i*14+ 6] * variance[0] * priors[i].width)  * inputW;  // left eye, x
-        face.at<float>(0, 7) = (priors[i].y + loc_v[i*14+ 7] * variance[0] * priors[i].height) * inputH;  // left eye, y
-        face.at<float>(0, 8) = (priors[i].x + loc_v[i*14+ 8] * variance[0] * priors[i].width)  * inputW;  // nose tip, x
-        face.at<float>(0, 9) = (priors[i].y + loc_v[i*14+ 9] * variance[0] * priors[i].height) * inputH;  // nose tip, y
-        face.at<float>(0, 10) = (priors[i].x + loc_v[i*14+10] * variance[0] * priors[i].width)  * inputW; // right corner of mouth, x
-        face.at<float>(0, 11) = (priors[i].y + loc_v[i*14+11] * variance[0] * priors[i].height) * inputH; // right corner of mouth, y
-        face.at<float>(0, 12) = (priors[i].x + loc_v[i*14+12] * variance[0] * priors[i].width)  * inputW; // left corner of mouth, x
-        face.at<float>(0, 13) = (priors[i].y + loc_v[i*14+13] * variance[0] * priors[i].height) * inputH; // left corner of mouth, y
+        face.at<float>(0, 4) = (priors[i].x + loc_v[i*14+ 4] * variance[0] * priors[i].width)  * inputW();  // right eye, x
+        face.at<float>(0, 5) = (priors[i].y + loc_v[i*14+ 5] * variance[0] * priors[i].height) * inputH();  // right eye, y
+        face.at<float>(0, 6) = (priors[i].x + loc_v[i*14+ 6] * variance[0] * priors[i].width)  * inputW();  // left eye, x
+        face.at<float>(0, 7) = (priors[i].y + loc_v[i*14+ 7] * variance[0] * priors[i].height) * inputH();  // left eye, y
+        face.at<float>(0, 8) = (priors[i].x + loc_v[i*14+ 8] * variance[0] * priors[i].width)  * inputW();  // nose tip, x
+        face.at<float>(0, 9) = (priors[i].y + loc_v[i*14+ 9] * variance[0] * priors[i].height) * inputH();  // nose tip, y
+        face.at<float>(0, 10) = (priors[i].x + loc_v[i*14+10] * variance[0] * priors[i].width)  * inputW(); // right corner of mouth, x
+        face.at<float>(0, 11) = (priors[i].y + loc_v[i*14+11] * variance[0] * priors[i].height) * inputH(); // right corner of mouth, y
+        face.at<float>(0, 12) = (priors[i].x + loc_v[i*14+12] * variance[0] * priors[i].width)  * inputW(); // left corner of mouth, x
+        face.at<float>(0, 13) = (priors[i].y + loc_v[i*14+13] * variance[0] * priors[i].height) * inputH(); // left corner of mouth, y
 
         faces.push_back(face);
     }

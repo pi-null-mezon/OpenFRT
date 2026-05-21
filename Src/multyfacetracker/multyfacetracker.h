@@ -3,6 +3,10 @@
 
 #include "facedetector.h"
 
+#ifndef FACETRACKER_HISTORYLENGTH_FRAMES
+#define FACETRACKER_HISTORYLENGTH_FRAMES 4
+#endif
+
 namespace cv { namespace ofrt {
 
 /**
